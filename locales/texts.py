@@ -459,6 +459,32 @@ TEXTS = {
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
+    "setup_tv": {
+        "ru": (
+            "📺 <b>Подключение на Android TV</b>\n\n"
+            "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n"
+            "Для телевизоров важно использовать приложения с поддержкой пульта.\n\n"
+            "📦 <b>Рекомендуемые приложения:</b>\n\n"
+            "• <a href=\"https://github.com/2dust/v2rayNG/releases\">V2RayNG (APK)</a> — работает стабильно, можно установить вручную\n"
+            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — современный интерфейс, поддержка подписок ✅\n"
+            "• <a href=\"https://github.com/SagerNet/sing-box/releases\">Sing-Box</a> — официальный клиент, но требует ручной настройки\n"
+            "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — для продвинутых пользователей\n\n"
+            "💡 <b>Совет:</b> чаще всего приложения нужно устанавливать через APK (sideload).\n\n"
+            "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
+        ),
+        "en": (
+            "📺 <b>Android TV Setup</b>\n\n"
+            "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n"
+            "For TVs, it's important to use apps with remote control support.\n\n"
+            "📦 <b>Recommended apps:</b>\n\n"
+            "• <a href=\"https://github.com/2dust/v2rayNG/releases\">V2RayNG (APK)</a> — stable, can be installed manually\n"
+            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — modern UI, supports subscriptions ✅\n"
+            "• <a href=\"https://github.com/SagerNet/sing-box/releases\">Sing-Box</a> — official client, but requires manual setup\n"
+            "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — for advanced users\n\n"
+            "💡 <b>Tip:</b> most apps are installed via APK (sideloading).\n\n"
+            "📌 Find your subscription link in the <b>👤 Profile</b> section."
+        ),
+    },
 }
 
 

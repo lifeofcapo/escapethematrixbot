@@ -15,6 +15,7 @@ from keyboards.kb import (
     plans_keyboard, pay_now_keyboard, back_keyboard,
     topup_method_keyboard, topup_crypto_keyboard, confirm_purchase_keyboard,
     region_keyboard, REGIONS,
+    payment_success_keyboard,
 )
 from locales.texts import t
 from services.yookassa import create_yookassa_payment, check_yookassa_payment
@@ -240,7 +241,7 @@ async def confirm_buy(callback: CallbackQuery, bot: Bot):
     await callback.answer()
 
 
-async def _activate_plan_balance(bot: Bot, user_id: int, plan_id: str, lang: str, region: str = "fi"):
+async def _activate_plan_balance(bot, user_id: int, plan_id: str, lang: str, region: str = "fi"):
     if plan_id == "extra_devices":
         sub = await get_active_subscription(user_id)
         if sub:
@@ -253,34 +254,35 @@ async def _activate_plan_balance(bot: Bot, user_id: int, plan_id: str, lang: str
                 else f"✅ Device limit increased to {new_limit}!",
             )
         return
-
+ 
     plan = config.PLANS.get(plan_id)
     if not plan:
         return
-
+ 
     days = plan["days"]
     existing_sub = await get_active_subscription(user_id)
-
+ 
     if existing_sub:
         await extend_subscription(existing_sub["id"], days)
         await bot.send_message(
             user_id,
             t("payment_success", lang, sub_link=existing_sub["sub_link"]),
             parse_mode="HTML",
+            reply_markup=payment_success_keyboard(lang), 
         )
     else:
         email = generate_sub_email(user_id)
-        # TODO: при добавлении нидерландского сервера — передавать region в create_client
-        # чтобы использовался нужный INBOUND_ID
+        #todo: при добавлении нидерландского сервера передавать регион в create_client,
+        #чтобы использовался нужный inbound
         xui_result = await create_client(email=email, days=days, devices_limit=config.MAX_DEVICES)
-
+ 
         if not xui_result:
             plan_price = float(plan["price_rub"])
             await update_balance(user_id, plan_price)
             await bot.send_message(user_id, t("error_generic", lang))
             logger.error(f"Failed to create xui client for user {user_id}, balance refunded")
             return
-
+ 
         sub_link = xui_result["sub_link"]
         await create_subscription(
             user_id=user_id,
@@ -291,11 +293,12 @@ async def _activate_plan_balance(bot: Bot, user_id: int, plan_id: str, lang: str
             days=days,
             devices_limit=config.MAX_DEVICES,
         )
-
+ 
         await bot.send_message(
             user_id,
             t("payment_success", lang, sub_link=sub_link),
             parse_mode="HTML",
+            reply_markup=payment_success_keyboard(lang), 
         )
 
 

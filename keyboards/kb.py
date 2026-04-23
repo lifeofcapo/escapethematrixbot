@@ -4,7 +4,7 @@ from config import config
 from locales.texts import t
 from services.cryptobot import CRYPTO_ASSETS
 
-# добавить позже нидерландский INBOUND_ID в config.py
+# добавить соответствующий нидерландский INBOUND_ID в config.py
 REGIONS = {
     "fi": {"flag": "🇫🇮", "name_ru": "Финляндия", "name_en": "Finland",  "available": True},
     # "nl": {"flag": "🇳🇱", "name_ru": "Нидерланды", "name_en": "Netherlands", "available": False},
@@ -56,6 +56,11 @@ def profile_keyboard(lang: str) -> InlineKeyboardMarkup:
             text=mini_app_label,
             web_app=WebAppInfo(url=config.MINI_APP_URL),
         )],
+        # инструкция по подключению
+        [InlineKeyboardButton(
+            text=t("btn_setup_guide", lang),
+            callback_data="setup:choose_platform",
+        )],
         [InlineKeyboardButton(text=t("btn_devices", lang),     callback_data="menu:devices")],
         [InlineKeyboardButton(text=t("btn_referral", lang),    callback_data="menu:referral")],
         [InlineKeyboardButton(text=t("btn_change_lang", lang), callback_data="menu:change_lang")],
@@ -63,8 +68,37 @@ def profile_keyboard(lang: str) -> InlineKeyboardMarkup:
     ])
 
 
+def setup_platform_keyboard(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🤖 Android",        callback_data="setup:android")],
+        [InlineKeyboardButton(text="🍎 iPhone / iPad",  callback_data="setup:ios")],
+        [InlineKeyboardButton(text="🪟 Windows",        callback_data="setup:windows")],
+        [InlineKeyboardButton(text="🍏 macOS",          callback_data="setup:macos")],
+        [InlineKeyboardButton(text="🐧 Linux",          callback_data="setup:linux")],
+        [InlineKeyboardButton(text="📺 Android TV",     callback_data="setup:tv")],
+        [InlineKeyboardButton(text=t("btn_back", lang), callback_data="menu:profile")],
+    ])
+
+
+def setup_back_keyboard(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="◀️ К выбору платформы" if lang == "ru" else "◀️ Back to platforms",
+            callback_data="setup:choose_platform",
+        )],
+    ])
+
+
+def payment_success_keyboard(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text=t("btn_setup_guide", lang),
+            callback_data="setup:choose_platform",
+        )],
+    ])
+
+
 def region_keyboard(lang: str) -> InlineKeyboardMarkup:
-    """Клавиатура выбора региона. Недоступные регионы показываются как 'скоро'."""
     rows = []
     for region_id, region in REGIONS.items():
         flag = region["flag"]
@@ -75,7 +109,6 @@ def region_keyboard(lang: str) -> InlineKeyboardMarkup:
                 callback_data=f"region:{region_id}",
             )])
         else:
-            # Показываем кнопку, но она недоступна (callback ведёт на заглушку)
             soon = "скоро" if lang == "ru" else "coming soon"
             rows.append([InlineKeyboardButton(
                 text=f"{flag} {name} ({soon})",
