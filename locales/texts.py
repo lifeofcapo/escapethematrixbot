@@ -173,8 +173,8 @@ TEXTS = {
         ),
     },
     "btn_devices": {"ru": "📱 Устройства", "en": "📱 Devices"},
-    "btn_yookassa":  {"ru": "💳 Банковская карта (ЮKassa)", "en": "💳 Bank card (YooKassa)"},
-    "btn_crypto":    {"ru": "₿ Криптовалюта (CryptoBot)",  "en": "₿ Crypto (CryptoBot)"},
+    "btn_yookassa":  {"ru": "💳 Банковская карта / СБП", "en": "💳 Bank card / FSP"},
+    "btn_crypto":    {"ru": "₿ Криптовалюта",  "en": "₿ Crypto"},
     "choose_crypto": {
         "ru": "🪙 Выберите криптовалюту:",
         "en": "🪙 Choose cryptocurrency:",
