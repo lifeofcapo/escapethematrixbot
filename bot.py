@@ -1,13 +1,3 @@
-"""
-bot.py — точка входа
-
-Изменения:
-- Redis FSM storage (с автофоллбэком на MemoryStorage если Redis недоступен)
-- Graceful shutdown: планировщик и polling завершаются корректно по Ctrl+C / SIGTERM
-- Запуск планировщика уведомлений об истечении подписок
-- /plans перенаправляет на выбор региона (обрабатывается в handlers/start.py)
-- Webhook НЕ используется (локальная разработка → только polling)
-"""
 import asyncio
 import logging
 import sys
@@ -88,18 +78,10 @@ async def main():
     dp.include_router(referral.router)
     dp.include_router(payment.router)
     dp.include_router(support.router)
-
-    # Флаг для graceful shutdown
-    stop_event = asyncio.Event()
-
-    # Планировщик уведомлений об истечении подписок
-    scheduler_task = asyncio.create_task(run_scheduler(bot))
-
-    # Внутренний API для Mini App (слушает на localhost:8000, не доступен снаружи)
-    internal_api_task = asyncio.create_task(start_internal_api())
-
-    # Обработчик сигналов (SIGINT = Ctrl+C, SIGTERM = systemd stop)
-    loop = asyncio.get_running_loop()
+    stop_event = asyncio.Event()     # Флаг для graceful shutdown
+    scheduler_task = asyncio.create_task(run_scheduler(bot)) # Планировщик уведомлений об истечении подписок
+    internal_api_task = asyncio.create_task(start_internal_api()) # Внутренний API для Mini App (слушает на localhost:8000, не доступен снаружи)
+    loop = asyncio.get_running_loop() # Обработчик сигналов (SIGINT = Ctrl+C, SIGTERM = systemd stop)
 
     def _handle_signal():
         logger.info("Shutdown signal received")
@@ -119,33 +101,26 @@ async def main():
         dp.start_polling(bot, handle_signals=False)
     )
 
-    # Ждём сигнала остановки
     await stop_event.wait()
     logger.info("Stopping...")
-
-    # Останавливаем polling
     polling_task.cancel()
     try:
         await polling_task
     except asyncio.CancelledError:
         pass
 
-    # Останавливаем планировщик
     scheduler_task.cancel()
     try:
         await scheduler_task
     except asyncio.CancelledError:
         pass
-
-    # Останавливаем внутренний API
-    internal_api_task.cancel()
+    internal_api_task.cancel() # Останавливаем внутренний API
     try:
         await internal_api_task
     except asyncio.CancelledError:
         pass
 
-    # Закрываем соединения
-    if hasattr(storage, "close"):
+    if hasattr(storage, "close"): # Закрываем соединения
         await storage.close()
     await close_pool()
     await bot.session.close()

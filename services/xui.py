@@ -1,6 +1,5 @@
 """
-3x-ui panel API wrapper.
-Docs: https://github.com/MHSanaei/3x-ui
+3x-ui panel API wrapper. Docs: https://github.com/MHSanaei/3x-ui
 """
 import json
 import uuid
@@ -15,10 +14,8 @@ _path = f"/{config.PANEL_BASE_PATH}" if config.PANEL_BASE_PATH else ""
 BASE = f"{config.PANEL_BASE_URL}{_path}"
 SESSION_COOKIE: str | None = None
 
-
 async def _get_session() -> aiohttp.ClientSession:
     return aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-
 
 async def login() -> str | None:
     global SESSION_COOKIE
@@ -196,11 +193,6 @@ async def get_client_traffic(email: str) -> dict | None:
 
 
 async def get_online_count(email: str) -> int | None:
-    """
-    Get the number of currently connected devices for a client.
-    Uses the 3x-ui onlines endpoint.
-    Returns count of active IPs, or None if unavailable.
-    """
     try:
         async with await _get_session() as s:
             resp = await s.post(

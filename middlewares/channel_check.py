@@ -4,7 +4,6 @@ from typing import Callable, Awaitable, Any
 from config import config
 from database.db import get_user
 
-
 class ChannelCheckMiddleware(BaseMiddleware):
     """
     Checks if user has subscribed to the required channel.

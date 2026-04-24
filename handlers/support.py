@@ -8,7 +8,6 @@ router = Router()
 SUPPORT_DIRECT_URL = "https://t.me/EscapeTheMatrix_VPN?direct"
 SUPPORT_USERNAME = "@lifeofcapo"
 
-
 def support_keyboard(lang: str) -> InlineKeyboardMarkup:
     write_btn = "✍️ Написать в поддержку" if lang == "ru" else "✍️ Contact support"
     back_btn = "◀️ Назад" if lang == "ru" else "◀️ Back"

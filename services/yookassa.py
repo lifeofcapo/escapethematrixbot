@@ -1,4 +1,3 @@
-"""YooKassa payment integration."""
 import uuid
 import aiohttp
 import logging
@@ -7,7 +6,6 @@ from config import config
 logger = logging.getLogger(__name__)
 
 YOOKASSA_API = "https://api.yookassa.ru/v3/payments"
-
 
 async def create_yookassa_payment(
     amount_rub: float,

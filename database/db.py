@@ -1,6 +1,3 @@
-"""
-PostgreSQL database layer (asyncpg).
-"""
 import asyncpg
 import logging
 from datetime import datetime, timedelta, timezone

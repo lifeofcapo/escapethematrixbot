@@ -1,17 +1,7 @@
-"""
-services/scheduler.py
-
-Планировщик уведомлений об истечении подписки.
-Запускается как фоновая задача asyncio вместе с ботом.
-Проверяет каждые 6 часов подписки, истекающие через 7, 3 и 1 день,
-и отправляет уведомление каждому пользователю один раз.
-"""
 import asyncio
 import logging
 from datetime import datetime, timezone, timedelta
-
 from aiogram import Bot
-
 from database.db import get_pool
 from locales.texts import t
 from keyboards.kb import topup_method_keyboard
@@ -23,10 +13,6 @@ CHECK_INTERVAL = 6 * 3600
 
 
 async def _get_expiring_subscriptions(days: int) -> list[dict]:
-    """
-    Возвращает подписки, которые истекают ровно через `days` дней
-    (окно ±12 часов от полуночи целевого дня, чтобы не пропустить).
-    """
     now = datetime.now(timezone.utc)
     window_start = now + timedelta(days=days) - timedelta(hours=12)
     window_end   = now + timedelta(days=days) + timedelta(hours=12)

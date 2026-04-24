@@ -1,14 +1,6 @@
 """
-services/internal_api.py
-
 Лёгкий HTTP-сервер (aiohttp) для внутреннего использования Next.js.
-Запускается вместе с ботом и слушает на localhost:8000.
 Доступен только изнутри — не открывается наружу.
-
-Добавь в bot.py:
-    from services.internal_api import start_internal_api
-    ...
-    asyncio.create_task(start_internal_api())
 """
 import logging
 import os
@@ -18,7 +10,7 @@ from utils.helpers import days_left
 
 logger = logging.getLogger(__name__)
 
-INTERNAL_SECRET = os.getenv("INTERNAL_SECRET", "change_me_in_production")
+INTERNAL_SECRET = os.getenv("INTERNAL_SECRET", "")
 PORT = int(os.getenv("INTERNAL_API_PORT", "8000"))
 
 

@@ -1,7 +1,3 @@
-"""
-Admin broadcast handler.
-Admins send a photo with caption → bot previews → confirms → sends to all users.
-"""
 import asyncio
 import logging
 import uuid
