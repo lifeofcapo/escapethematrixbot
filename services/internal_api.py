@@ -1,7 +1,4 @@
-"""
-Лёгкий HTTP-сервер (aiohttp) для внутреннего использования Next.js.
-Доступен только изнутри — не открывается наружу.
-"""
+#для next js и mini app
 import logging
 import os
 from aiohttp import web
@@ -15,7 +12,6 @@ PORT = int(os.getenv("INTERNAL_API_PORT", "8000"))
 
 
 def _auth(request: web.Request) -> bool:
-    """Проверяет X-Internal-Secret заголовок."""
     return request.headers.get("X-Internal-Secret") == INTERNAL_SECRET
 
 
@@ -48,7 +44,7 @@ async def handle_profile(request: web.Request) -> web.Response:
             "days_left": d_left,
             "devices_limit": sub["devices_limit"],
             "sub_link": sub["sub_link"],
-            "region": "fi",  # TODO: когда добавишь мульти-регион — брать из sub
+            "region": "fi",  # TODO: когда добавлю мульти-регион — брать из sub
         }
 
     return web.json_response({
@@ -69,7 +65,7 @@ async def start_internal_api():
 
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, host="127.0.0.1", port=PORT)
+    site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
     await site.start()
     logger.info(f"Internal API started on 127.0.0.1:{PORT}")
 
