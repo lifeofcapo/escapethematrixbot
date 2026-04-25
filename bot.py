@@ -23,11 +23,11 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
+logging.getLogger("aiogram.event").setLevel(logging.WARNING)
+logging.getLogger("aiogram.middlewares").setLevel(logging.WARNING)
+logging.getLogger("aiogram.dispatcher").setLevel(logging.WARNING)
+
 def _make_storage():
-    """
-    Пробуем подключить Redis. Если REDIS_URL не задан или Redis недоступен —
-    падаем обратно на MemoryStorage (удобно при локальной разработке).
-    """
     redis_url = config.REDIS_URL
     if redis_url:
         try:
@@ -67,11 +67,12 @@ async def main():
 
     storage = _make_storage()
     dp = Dispatcher(storage=storage)
+    dp["fsm_storage"] = storage
 
     dp.message.middleware(ChannelCheckMiddleware())
     dp.callback_query.middleware(ChannelCheckMiddleware())
 
-    # broadcast ПЕРВЫМ — до channel_check, чтобы фото от админов не блокировались
+    # broadcast первым до channel_check, чтобы фото от админов не блокировались
     dp.include_router(broadcast.router)
     dp.include_router(start.router)
     dp.include_router(profile.router)
@@ -80,8 +81,8 @@ async def main():
     dp.include_router(support.router)
     stop_event = asyncio.Event()     # Флаг для graceful shutdown
     scheduler_task = asyncio.create_task(run_scheduler(bot)) # Планировщик уведомлений об истечении подписок
-    internal_api_task = asyncio.create_task(start_internal_api()) # Внутренний API для Mini App (слушает на localhost:8000, не доступен снаружи)
-    loop = asyncio.get_running_loop() # Обработчик сигналов (SIGINT = Ctrl+C, SIGTERM = systemd stop)
+    internal_api_task = asyncio.create_task(start_internal_api()) 
+    loop = asyncio.get_running_loop() # (SIGINT = Ctrl+C, SIGTERM = systemd stop)
 
     def _handle_signal():
         logger.info("Shutdown signal received")
@@ -123,6 +124,8 @@ async def main():
     if hasattr(storage, "close"): # Закрываем соединения
         await storage.close()
     await close_pool()
+    from services.xui import close_session as close_xui_session
+    await close_xui_session()
     await bot.session.close()
     logger.info("Bot stopped cleanly")
 

@@ -28,6 +28,9 @@ class Config:
     EXTRA_DEVICES: int = 3       # доп. устройства за доплату
     EXTRA_DEVICES_PRICE: int = 50  # рублей
 
+    INBOUND_NL_ID: int = int(os.getenv("INBOUND_NL_ID", "0"))
+    INBOUND_NL_MOBILE_ID: int = int(os.getenv("INBOUND_NL_MOBILE_ID", "0"))
+
     PLANS: dict = field(default_factory=lambda: {
         "1m": {"days": 30,  "price_rub": 100, "label_ru": "1 месяц",   "label_en": "1 month"},
         "3m": {"days": 90,  "price_rub": 290, "label_ru": "3 месяца",  "label_en": "3 months"},
@@ -51,6 +54,5 @@ class Config:
     WEBHOOK_HOST: str = os.getenv("WEBHOOK_HOST", "https://escapethematrix.to")
     WEBHOOK_PATH: str = "/webhook/bot"
     WEBHOOK_PORT: int = int(os.getenv("WEBHOOK_PORT", "8443"))
-
 
 config = Config()

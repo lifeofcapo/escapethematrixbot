@@ -25,7 +25,7 @@ from utils.helpers import generate_sub_email
 
 logger = logging.getLogger(__name__)
 router = Router()
-
+_PHOTO_FILE_IDS = dict[str, str] = {}
 PHOTOS = {
     "menu":    "assets/menu.png",
     "plans":   "assets/plans.jpg",
@@ -38,38 +38,47 @@ class TopUpStates(StatesGroup):
     waiting_amount = State()
 
 
-async def _edit_or_answer(callback: CallbackQuery, text: str, reply_markup, photo: str = None):
-    """Edit message or send new one with optional photo."""
+async def _edit_or_answer(callback: CallbackQuery, text: str, reply_markup, photo=None):
     if photo:
+        photo_key = None
+        # Определяем ключ кэша
+        if isinstance(photo, FSInputFile):
+            for k, v in PHOTOS.items():
+                if v == photo.path:
+                    photo_key = k
+                    break
+            cached = _PHOTO_FILE_IDS.get(photo_key) if photo_key else None
+            actual_photo = cached if cached else photo
+        else:
+            actual_photo = photo
+            photo_key = None
+
         try:
-            await callback.message.edit_media(
-                media=InputMediaPhoto(media=photo, caption=text, parse_mode="HTML"),
+            msg = await callback.message.edit_media(
+                media=InputMediaPhoto(media=actual_photo, caption=text, parse_mode="HTML"),
                 reply_markup=reply_markup,
-            )
-            return
-        except Exception:
-            pass
-        try:
-            await callback.message.delete()
-        except Exception:
-            pass
-        await callback.message.answer_photo(
-            photo=photo, caption=text, reply_markup=reply_markup, parse_mode="HTML"
-        )
-    else:
-        try:
-            await callback.message.edit_text(
-                text, reply_markup=reply_markup, parse_mode="HTML"
             )
         except Exception:
             try:
-                await callback.message.edit_caption(
-                    caption=text, reply_markup=reply_markup, parse_mode="HTML"
-                )
+                await callback.message.delete()
             except Exception:
-                await callback.message.answer(
-                    text, reply_markup=reply_markup, parse_mode="HTML"
-                )
+                pass
+            msg = await callback.message.answer_photo(
+                photo=actual_photo, caption=text, reply_markup=reply_markup, parse_mode="HTML"
+            )
+        
+        # Кэшируем file_id
+        if photo_key and photo_key not in _PHOTO_FILE_IDS:
+            if msg and hasattr(msg, "photo") and msg.photo:
+                _PHOTO_FILE_IDS[photo_key] = msg.photo[-1].file_id
+    else:
+        try:
+            await callback.message.edit_text(text, reply_markup=reply_markup, parse_mode="HTML")
+        except Exception:
+            try:
+                await callback.message.edit_caption(caption=text, reply_markup=reply_markup, parse_mode="HTML")
+            except Exception:
+                await callback.message.answer(text, reply_markup=reply_markup, parse_mode="HTML")
 @router.callback_query(F.data == "menu:region")
 async def show_region_select(callback: CallbackQuery):
     """Первый шаг при нажатии 'Подписки' — выбор региона."""
@@ -274,7 +283,7 @@ async def _activate_plan_balance(bot, user_id: int, plan_id: str, lang: str, reg
         email = generate_sub_email(user_id)
         #todo: при добавлении нидерландского сервера передавать регион в create_client,
         #чтобы использовался нужный inbound
-        xui_result = await create_client(email=email, days=days, devices_limit=config.MAX_DEVICES)
+        xui_result = await create_client(email=email, days=days, devices_limit=config.MAX_DEVICES, region=region)
  
         if not xui_result:
             plan_price = float(plan["price_rub"])
@@ -292,6 +301,7 @@ async def _activate_plan_balance(bot, user_id: int, plan_id: str, lang: str, reg
             plan=plan_id,
             days=days,
             devices_limit=config.MAX_DEVICES,
+            region=region,
         )
  
         await bot.send_message(

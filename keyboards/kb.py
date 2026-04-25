@@ -7,7 +7,7 @@ from services.cryptobot import CRYPTO_ASSETS
 # добавить соответствующий нидерландский INBOUND_ID в config.py
 REGIONS = {
     "fi": {"flag": "🇫🇮", "name_ru": "Финляндия", "name_en": "Finland",  "available": True},
-    # "nl": {"flag": "🇳🇱", "name_ru": "Нидерланды", "name_en": "Netherlands", "available": False},
+    "nl": {"flag": "🇳🇱", "name_ru": "Нидерланды", "name_en": "Netherlands", "available": False},
 }
 
 

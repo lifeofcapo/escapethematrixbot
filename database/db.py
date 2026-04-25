@@ -55,6 +55,7 @@ async def init_db() -> None:
             xui_email       TEXT,
             sub_link        TEXT,
             plan            TEXT,
+            region          TEXT        NOT NULL DEFAULT 'fi',
             devices_limit   INTEGER     NOT NULL DEFAULT 3,
             started_at      TIMESTAMPTZ,
             expires_at      TIMESTAMPTZ,
@@ -87,6 +88,31 @@ async def init_db() -> None:
             sent_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             UNIQUE (sub_id, notify_days)
         );
+                           
+        CREATE TABLE IF NOT EXISTS payment_log (
+            id          SERIAL      PRIMARY KEY,
+            payment_id  TEXT        UNIQUE NOT NULL,
+            tg_id       BIGINT,
+            amount      NUMERIC(12,2) NOT NULL,
+            method      TEXT        NOT NULL,
+            created_at  TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id          BIGSERIAL   PRIMARY KEY,
+            user_id     BIGINT      NOT NULL REFERENCES users(id),
+            message     TEXT,
+            status      TEXT        NOT NULL DEFAULT 'open',
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+                           
+        ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS region TEXT NOT NULL DEFAULT 'fi';
+                           
+        CREATE INDEX IF NOT EXISTS idx_subscriptions_expires_active
+            ON subscriptions(is_active, expires_at);
+        CREATE INDEX IF NOT EXISTS idx_payments_user_id
+            ON payments(user_id);
+        CREATE INDEX IF NOT EXISTS idx_users_referred_by
+            ON users(referred_by);
         """)
     logger.info("Database schema initialized")
 
@@ -166,18 +192,18 @@ async def get_active_subscription(user_id: int) -> dict | None:
 
 async def create_subscription(user_id: int, xui_client_id: str, xui_email: str,
                                sub_link: str, plan: str, days: int,
-                               devices_limit: int = 3) -> int:
+                               devices_limit: int = 3, region: str = "fi") -> int:
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=days)
     async with get_pool().acquire() as conn:
         row = await conn.fetchrow("""
             INSERT INTO subscriptions
                 (user_id, xui_client_id, xui_email, sub_link, plan,
-                 devices_limit, started_at, expires_at, is_active)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)
+                 region, devices_limit, started_at, expires_at, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
             RETURNING id
         """, user_id, xui_client_id, xui_email, sub_link, plan,
-             devices_limit, now, expires)
+             region, devices_limit, now, expires)
         return row["id"]
 
 

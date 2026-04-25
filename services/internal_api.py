@@ -67,7 +67,7 @@ async def start_internal_api():
     await runner.setup()
     site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
     await site.start()
-    logger.info(f"Internal API started on 127.0.0.1:{PORT}")
+    logger.info(f"Internal API started on 0.0.0.0:{PORT}")
 
     # Держим сервер живым — task отменится при shutdown бота
     import asyncio

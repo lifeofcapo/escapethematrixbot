@@ -9,7 +9,7 @@ from keyboards.kb import topup_method_keyboard
 logger = logging.getLogger(__name__)
 
 NOTIFY_DAYS = [7, 3, 1]
-CHECK_INTERVAL = 6 * 3600
+CHECK_INTERVAL = 12 * 3600
 
 
 async def _get_expiring_subscriptions(days: int) -> list[dict]:
@@ -35,7 +35,6 @@ async def _get_expiring_subscriptions(days: int) -> list[dict]:
 
 
 async def _already_notified(sub_id: int, days: int) -> bool:
-    """Проверяет, было ли уже отправлено уведомление за X дней для этой подписки."""
     async with get_pool().acquire() as conn:
         val = await conn.fetchval("""
             SELECT 1 FROM expiry_notifications
@@ -70,7 +69,6 @@ async def _send_notification(bot: Bot, user_id: int, lang: str,
 
 
 async def run_scheduler(bot: Bot) -> None:
-    """Основной цикл планировщика. Запускается как asyncio.Task."""
     logger.info("Scheduler started")
     while True:
         try:
