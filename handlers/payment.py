@@ -25,7 +25,7 @@ from utils.helpers import generate_sub_email
 
 logger = logging.getLogger(__name__)
 router = Router()
-_PHOTO_FILE_IDS = dict[str, str] = {}
+_PHOTO_FILE_IDS: dict[str, str] = {}
 PHOTOS = {
     "menu":    "assets/menu.png",
     "plans":   "assets/plans.jpg",
