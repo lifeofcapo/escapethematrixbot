@@ -34,8 +34,8 @@ def days_left(dt_val) -> int:
             expires = datetime.fromisoformat(dt_val)
         else:
             expires = dt_val
-        if expires.tzinfo is not None:
-            expires = expires.astimezone(timezone.utc).replace(tzinfo=None)
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
         delta = (expires - datetime.now(timezone.utc)).days
         return max(delta, 0)
     except Exception:
