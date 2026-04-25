@@ -23,9 +23,7 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
-logging.getLogger("aiogram.event").setLevel(logging.WARNING)
-logging.getLogger("aiogram.middlewares").setLevel(logging.WARNING)
-logging.getLogger("aiogram.dispatcher").setLevel(logging.WARNING)
+logging.getLogger("aiogram").setLevel(logging.WARNING)
 
 def _make_storage():
     redis_url = config.REDIS_URL
