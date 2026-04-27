@@ -14,13 +14,13 @@ from database.db import (
 from keyboards.kb import (
     plans_keyboard, pay_now_keyboard, back_keyboard,
     topup_method_keyboard, topup_crypto_keyboard, confirm_purchase_keyboard,
-    region_keyboard, REGIONS,
+    region_keyboard, region_label,
     payment_success_keyboard,
 )
 from locales.texts import t
 from services.yookassa import create_yookassa_payment, check_yookassa_payment
 from services.cryptobot import create_crypto_invoice, check_crypto_invoice, rub_to_asset
-from services.xui import create_client, update_client_ip_limit
+from services.xui import create_client, update_client_ip_limit, update_client_expiry
 from utils.helpers import generate_sub_email
 
 logger = logging.getLogger(__name__)
@@ -256,61 +256,80 @@ async def _activate_plan_balance(bot, user_id: int, plan_id: str, lang: str, reg
         if sub:
             new_limit = sub["devices_limit"] + config.EXTRA_DEVICES
             await update_devices_limit(sub["id"], new_limit)
-            await update_client_ip_limit(sub["xui_client_id"], sub["xui_email"], new_limit)
+            await update_client_ip_limit(sub["xui_client_id"], sub["xui_email"], new_limit, sub.get("region", "fi"))
             await bot.send_message(
                 user_id,
                 f"✅ Лимит устройств увеличен до {new_limit}!" if lang == "ru"
                 else f"✅ Device limit increased to {new_limit}!",
             )
         return
- 
+
     plan = config.PLANS.get(plan_id)
     if not plan:
         return
- 
+
     days = plan["days"]
     existing_sub = await get_active_subscription(user_id)
- 
-    if existing_sub:
+
+    # Если у пользователя уже есть подписка того же региона — продлеваем
+    if existing_sub and existing_sub.get("region") == region:
+        # Сохраняем старую дату в миллисекундах ДО продления в БД
+        old_expire = existing_sub["expires_at"]
+        if hasattr(old_expire, "timestamp"):
+            old_expire_ms = int(old_expire.timestamp() * 1000)
+        else:
+            # на случай, если expires_at – строка
+            from datetime import datetime, timezone
+            dt = datetime.fromisoformat(str(old_expire))
+            old_expire_ms = int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
+
         await extend_subscription(existing_sub["id"], days)
-        await bot.send_message(
-            user_id,
-            t("payment_success", lang, sub_link=existing_sub["sub_link"]),
-            parse_mode="HTML",
-            reply_markup=payment_success_keyboard(lang), 
-        )
-    else:
-        email = generate_sub_email(user_id)
-        #todo: при добавлении нидерландского сервера передавать регион в create_client,
-        #чтобы использовался нужный inbound
-        xui_result = await create_client(email=email, days=days, devices_limit=config.MAX_DEVICES, region=region)
- 
-        if not xui_result:
-            plan_price = float(plan["price_rub"])
-            await update_balance(user_id, plan_price)
-            await bot.send_message(user_id, t("error_generic", lang))
-            logger.error(f"Failed to create xui client for user {user_id}, balance refunded")
-            return
- 
-        sub_link = xui_result["sub_link"]
-        await create_subscription(
-            user_id=user_id,
-            xui_client_id=xui_result["client_id"],
-            xui_email=email,
-            sub_link=sub_link,
-            plan=plan_id,
-            days=days,
-            devices_limit=config.MAX_DEVICES,
+        await update_client_expiry(
+            existing_sub["xui_client_id"],
+            existing_sub["xui_email"],
+            days,
+            old_expire_ms,
             region=region,
         )
- 
+        region_str = region_label(region, lang)
         await bot.send_message(
             user_id,
-            t("payment_success", lang, sub_link=sub_link),
+            t("payment_success", lang, sub_link=existing_sub["sub_link"], region_label=region_str),
             parse_mode="HTML",
-            reply_markup=payment_success_keyboard(lang), 
+            reply_markup=payment_success_keyboard(lang),
         )
+        return
 
+    # Нет подписки или регион отличается — создаём новую
+    email = generate_sub_email(user_id)
+    xui_result = await create_client(email=email, days=days, devices_limit=config.MAX_DEVICES, region=region)
+
+    if not xui_result:
+        plan_price = float(plan["price_rub"])
+        await update_balance(user_id, plan_price)
+        await bot.send_message(user_id, t("error_generic", lang))
+        logger.error(f"Failed to create xui client for user {user_id}, balance refunded")
+        return
+
+    sub_link = xui_result["sub_link"]
+    await create_subscription(
+        user_id=user_id,
+        xui_client_id=xui_result["client_id"],
+        xui_email=email,
+        sub_link=sub_link,
+        plan=plan_id,
+        days=days,
+        devices_limit=config.MAX_DEVICES,
+        region=region,
+    )
+
+    region_str = region_label(region, lang)
+    await bot.send_message(
+        user_id,
+        t("payment_success", lang, sub_link=sub_link, region_label=region_str),
+        parse_mode="HTML",
+        reply_markup=payment_success_keyboard(lang),
+    )
 
 @router.callback_query(F.data == "menu:topup")
 async def show_topup(callback: CallbackQuery):
@@ -469,6 +488,11 @@ async def _poll_topup_yookassa(bot: Bot, user_id: int, payment_id: str,
                 await mark_payment_paid(payment_id)
                 await update_balance(user_id, amount)
                 balance = await get_balance(user_id)
+                user = await get_user(user_id)
+                if user and user.get("referred_by"):
+                    referrer_id = user["referred_by"]
+                    bonus = amount * config.REFERRAL_BONUS_PERCENT / 100.0
+                    await update_balance(referrer_id, bonus)
                 await bot.send_message(
                     user_id,
                     t("balance_topped", lang, amount=amount, balance=f"{balance:.2f}"),
@@ -489,6 +513,11 @@ async def _poll_topup_crypto(bot: Bot, user_id: int, invoice_id: str,
                 await mark_payment_paid(invoice_id)
                 await update_balance(user_id, amount)
                 balance = await get_balance(user_id)
+                user = await get_user(user_id)
+                if user and user.get("referred_by"):
+                    referrer_id = user["referred_by"]
+                    bonus = amount * config.REFERRAL_BONUS_PERCENT / 100.0
+                    await update_balance(referrer_id, bonus)                
                 await bot.send_message(
                     user_id,
                     t("balance_topped", lang, amount=amount, balance=f"{balance:.2f}"),

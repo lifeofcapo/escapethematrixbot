@@ -68,14 +68,14 @@ TEXTS = {
     "sub_active": {
         "ru": (
             "✅ Активна\n"
-            "🌍 Регион: 🇫🇮 Финляндия\n"
+            "🌍 Регион: {region_label}\n"
             "📅 Истекает: {expires} ({days_left} дн.)\n"
             "📱 Устройств: {limit}\n"
             "🔗 Ссылка подписки:\n<code>{sub_link}</code>"
         ),
         "en": (
             "✅ Active\n"
-            "🌍 Region: 🇫🇮 Finland\n"
+            "🌍 Region: {region_label}\n"
             "📅 Expires: {expires} ({days_left} days left)\n"
             "📱 Devices: {limit}\n"
             "🔗 Subscription link:\n<code>{sub_link}</code>"
@@ -195,14 +195,14 @@ TEXTS = {
     "payment_success": {
         "ru": (
             "✅ <b>Подписка активирована!</b>\n\n"
-            "🌍 Регион: 🇫🇮 Финляндия\n"
+            "🌍 Регион: {region_label}\n"
             "🔗 Ваша ссылка подписки:\n"
             "<code>{sub_link}</code>\n\n"
             "📱 Вставьте ссылку в приложение (Happ, FLClashX, NekoBox и др.)"
         ),
         "en": (
             "✅ <b>Subscription activated!</b>\n\n"
-            "🌍 Region: 🇫🇮 Finland\n"
+            "🌍 Region: {region_label}\n"
             "🔗 Your subscription link:\n"
             "<code>{sub_link}</code>\n\n"
             "📱 Paste the link into your VPN app (Happ, FLClashX, NekoBox, etc.)"

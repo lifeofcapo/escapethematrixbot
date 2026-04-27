@@ -13,6 +13,7 @@ from keyboards.kb import (
     profile_keyboard,
     setup_platform_keyboard,
     setup_back_keyboard,
+    region_label,
 )
 from locales.texts import t
 from utils.helpers import format_datetime, days_left
@@ -60,8 +61,10 @@ async def _build_profile_text(user: dict, lang: str) -> str:
     if sub:
         expires = format_datetime(sub["expires_at"], lang)
         d_left = days_left(sub["expires_at"])
+        sub_region_label = region_label(sub.get("region", "fi"), lang)
         sub_info = t("sub_active", lang, expires=expires, days_left=d_left,
-                     limit=sub["devices_limit"], sub_link=sub["sub_link"])
+                     limit=sub["devices_limit"], sub_link=sub["sub_link"],
+                     region_label=sub_region_label)
     else:
         sub_info = t("sub_none", lang)
 

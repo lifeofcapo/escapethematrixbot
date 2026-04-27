@@ -5,7 +5,7 @@ from config import config
 from database.db import get_user, create_user, count_referrals, get_balance, get_active_subscription
 from keyboards.kb import (
     lang_keyboard, subscribe_keyboard, main_menu,
-    back_keyboard, profile_keyboard, topup_method_keyboard, region_keyboard,
+    back_keyboard, profile_keyboard, topup_method_keyboard, region_keyboard, region_label,
 )
 from locales.texts import t
 from utils.helpers import generate_profile_key, format_datetime, days_left
@@ -197,8 +197,10 @@ async def cmd_profile(message: Message):
     if sub:
         expires = format_datetime(sub["expires_at"], lang)
         d_left = days_left(sub["expires_at"])
+        sub_region_label = region_label(sub.get("region", "fi"), lang)
         sub_info = t("sub_active", lang, expires=expires, days_left=d_left,
-                     limit=sub["devices_limit"], sub_link=sub["sub_link"])
+                     limit=sub["devices_limit"], sub_link=sub["sub_link"],
+                     region_label=sub_region_label)
     else:
         sub_info = t("sub_none", lang)
 
