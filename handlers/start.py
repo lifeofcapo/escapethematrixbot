@@ -2,7 +2,7 @@ from aiogram import Router, Bot, F
 from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
 from config import config
-from database.db import get_user, create_user, count_referrals, get_balance, get_active_subscription
+from database.db import get_user, create_user, count_referrals, get_balance, get_active_subscriptions
 from keyboards.kb import (
     lang_keyboard, subscribe_keyboard, main_menu,
     back_keyboard, profile_keyboard, topup_method_keyboard, region_keyboard, REGIONS, region_label,
@@ -13,9 +13,9 @@ from utils.helpers import generate_profile_key, format_datetime, days_left
 router = Router()
 PHOTOS = {
     "menu":    "assets/menu.png",
-    "plans":   "assets/plans.jpg",
+    "plans":   "assets/plans.png",
     "topup":   "assets/topup.png",
-    "profile": "assets/profile.jpg",
+    "profile": "assets/profile.png",
 }
 
 
@@ -191,7 +191,7 @@ async def cmd_profile(message: Message):
     if not user:
         return
     lang = user.get("language", "ru")
-    sub = await get_active_subscription(user["id"])
+    sub = await get_active_subscriptions(user["id"])
     referrals = await count_referrals(user["id"])
 
     if sub:

@@ -35,7 +35,7 @@ class Config:
     PANEL_NL_PASS: str = os.getenv("PANEL_NL_PASS", "")
     PANEL_NL_BASE_PATH: str = os.getenv("PANEL_NL_BASE_PATH", "")
     SUB_NL_HOST: str = os.getenv("SUB_NL_HOST", "https://nl.escapethematrix.to")
-    SUB_NL_PORT: int = int(os.getenv("SUB_NL_PORT", "2053"))
+    SUB_NL_PORT: int = int(os.getenv("SUB_NL_PORT", "2096"))
 
     MAX_DEVICES: int = 3
     EXTRA_DEVICES: int = 3       # доп. устройства за доплату

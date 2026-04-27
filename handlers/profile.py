@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery, FSInputFile, InputMediaPhoto, InlineKey
 from aiogram.filters import Command
 from aiogram.types import Message
 from config import config
-from database.db import get_user, get_active_subscription, count_referrals
+from database.db import get_user, get_active_subscription, get_active_subscriptions, count_referrals
 from keyboards.kb import (
     profile_keyboard,
     setup_platform_keyboard,
@@ -23,7 +23,7 @@ router = Router()
 
 _PHOTO_FILE_IDS: dict[str, str] = {}
 PHOTOS = {
-    "profile": "assets/profile.jpg",
+    "profile": "assets/profile.png",
 }
 
 SETUP_PLATFORMS = {"android", "ios", "windows", "macos", "linux", "tv"}
@@ -55,16 +55,22 @@ async def _send_profile_photo(callback, text, kb):
         _PHOTO_FILE_IDS["profile"] = msg.photo[-1].file_id
 
 async def _build_profile_text(user: dict, lang: str) -> str:
-    sub = await get_active_subscription(user["id"])
+    subs = await get_active_subscriptions(user["id"])
     referrals = await count_referrals(user["id"])
 
-    if sub:
-        expires = format_datetime(sub["expires_at"], lang)
-        d_left = days_left(sub["expires_at"])
-        sub_region_label = region_label(sub.get("region", "fi"), lang)
-        sub_info = t("sub_active", lang, expires=expires, days_left=d_left,
-                     limit=sub["devices_limit"], sub_link=sub["sub_link"],
-                     region_label=sub_region_label)
+    if subs:
+        sub_lines = []
+        for sub in subs:
+            expires = format_datetime(sub["expires_at"], lang)
+            d_left = days_left(sub["expires_at"])
+            sub_region_label = region_label(sub.get("region", "fi"), lang)
+            sub_lines.append(
+                f"🌍 {sub_region_label}\n"
+                f"📅 {expires} ({d_left} дн.)\n"
+                f"📱 Устройств: {sub['devices_limit']}\n"
+                f"🔗 <code>{sub['sub_link']}</code>"
+            )
+        sub_info = "\n\n".join(sub_lines)
     else:
         sub_info = t("sub_none", lang)
 

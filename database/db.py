@@ -189,6 +189,15 @@ async def get_active_subscription(user_id: int) -> dict | None:
         """, user_id)
         return _row(row)
 
+async def get_active_subscriptions(user_id: int) -> list[dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch("""
+            SELECT * FROM subscriptions
+            WHERE user_id = $1 AND is_active = TRUE
+            ORDER BY expires_at DESC
+        """, user_id)
+        return [_row(r) for r in rows]
+
 
 async def create_subscription(user_id: int, xui_client_id: str, xui_email: str,
                                sub_link: str, plan: str, days: int,

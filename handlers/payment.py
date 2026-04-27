@@ -28,9 +28,9 @@ router = Router()
 _PHOTO_FILE_IDS: dict[str, str] = {}
 PHOTOS = {
     "menu":    "assets/menu.png",
-    "plans":   "assets/plans.jpg",
+    "plans":   "assets/plans.png",
     "topup":   "assets/topup.png",
-    "profile": "assets/profile.jpg",
+    "profile": "assets/profile.png",
 }
 
 

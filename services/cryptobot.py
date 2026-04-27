@@ -1,4 +1,3 @@
-"""CryptoBot (https://t.me/CryptoBot) payment integration."""
 import aiohttp
 import logging
 from config import config
