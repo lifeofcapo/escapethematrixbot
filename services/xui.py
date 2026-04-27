@@ -1,4 +1,4 @@
-#3x-ui panel API wrapper. Docs: https://github.com/MHSanaei/3x-ui
+# 3x-ui panel API wrapper. Docs: https://github.com/MHSanaei/3x-ui
 import json
 import uuid
 import asyncio
@@ -9,99 +9,101 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
-_path = f"/{config.PANEL_BASE_PATH}" if config.PANEL_BASE_PATH else ""
-BASE = f"{config.PANEL_BASE_URL}{_path}"
-
-# Единая сессия на весь lifecycle + lock для защиты логина
-_session: aiohttp.ClientSession | None = None
-_session_lock = asyncio.Lock()
-SESSION_COOKIE: str | None = None
+def _build_base(host: str, port: int, base_path: str) -> str:
+    path = f"/{base_path}" if base_path else ""
+    return f"{host}:{port}{path}"
 
 
-def _new_session() -> aiohttp.ClientSession:
-    return aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
+class _PanelSession:
+    """Одиночная сессия к одной 3x-ui панели."""
 
+    def __init__(self, base: str, user: str, password: str, label: str):
+        self.base = base
+        self.user = user
+        self.password = password
+        self.label = label          # для логов: "FI" / "NL"
+        self._session: aiohttp.ClientSession | None = None
+        self._lock = asyncio.Lock()
+        self._cookie: str | None = None
 
-async def get_session() -> aiohttp.ClientSession:
-    global _session
-    if _session is None or _session.closed:
-        _session = _new_session()
-    return _session
+    def _new_session(self) -> aiohttp.ClientSession:
+        return aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
 
+    async def get_session(self) -> aiohttp.ClientSession:
+        if self._session is None or self._session.closed:
+            self._session = self._new_session()
+        return self._session
 
-async def close_session() -> None:
-    global _session
-    if _session and not _session.closed:
-        await _session.close()
-        _session = None
+    async def close(self) -> None:
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
+    async def login(self) -> str | None:
+        async with self._lock:
+            s = await self.get_session()
+            try:
+                resp = await s.post(
+                    f"{self.base}/login",
+                    json={"username": self.user, "password": self.password},
+                )
+                logger.debug(f"[{self.label}] xui login status: {resp.status}")
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("success"):
+                        set_cookie = resp.headers.get("Set-Cookie", "")
+                        if set_cookie:
+                            self._cookie = set_cookie.split(";")[0].strip()
+                        else:
+                            all_cookies = [f"{c.key}={c.value}" for c in s.cookie_jar]
+                            self._cookie = "; ".join(all_cookies)
+                        logger.debug(f"[{self.label}] xui login OK")
+                        return self._cookie
+            except Exception as e:
+                logger.error(f"[{self.label}] xui login exception: {e}")
+        logger.error(f"[{self.label}] xui login failed")
+        return None
 
-async def login() -> str | None:
-    """Логин в панель. Защищён lock от race condition."""
-    global SESSION_COOKIE
-    async with _session_lock:
-        s = await get_session()
-        try:
-            resp = await s.post(
-                f"{BASE}/login",
-                json={"username": config.PANEL_USER, "password": config.PANEL_PASS},
-            )
-            logger.debug(f"xui login status: {resp.status}")
-            if resp.status == 200:
-                data = await resp.json()
-                if data.get("success"):
-                    set_cookie = resp.headers.get("Set-Cookie", "")
-                    if set_cookie:
-                        SESSION_COOKIE = set_cookie.split(";")[0].strip()
-                    else:
-                        all_cookies = [f"{c.key}={c.value}" for c in s.cookie_jar]
-                        SESSION_COOKIE = "; ".join(all_cookies)
-                    logger.debug(f"xui login OK, cookie='{SESSION_COOKIE}'")
-                    return SESSION_COOKIE
-        except Exception as e:
-            logger.error(f"xui login exception: {e}")
-    logger.error("xui login failed")
-    return None
+    async def _headers(self) -> dict:
+        if not self._cookie:
+            await self.login()
+        return {"Cookie": self._cookie or "", "Content-Type": "application/json"}
 
-
-async def _headers(retry: bool = True) -> dict:
-    """Возвращает заголовки. При отсутствии cookie — логинится."""
-    global SESSION_COOKIE
-    if not SESSION_COOKIE:
-        await login()
-    return {"Cookie": SESSION_COOKIE or "", "Content-Type": "application/json"}
-
-
-async def _post_with_reauth(url: str, payload: dict) -> dict | None:
-    """POST с автоматическим re-login если сессия истекла (401/403)."""
-    global SESSION_COOKIE
-    s = await get_session()
-    for attempt in range(2):
-        headers = await _headers()
-        try:
-            resp = await s.post(url, json=payload, headers=headers)
-            if resp.status in (401, 403):
-                logger.warning("xui session expired, re-logging in...")
-                SESSION_COOKIE = None
-                await login()
-                continue
-            raw = await resp.text()
-            logger.debug(f"xui POST {url} status={resp.status} raw='{raw[:200]}'")
-            if not raw.strip():
-                logger.error(f"xui empty response, status={resp.status}")
+    async def post(self, path: str, payload: dict) -> dict | None:
+        """POST с авто-реauth при 401/403."""
+        s = await self.get_session()
+        for attempt in range(2):
+            headers = await self._headers()
+            try:
+                resp = await s.post(f"{self.base}{path}", json=payload, headers=headers)
+                if resp.status in (401, 403):
+                    logger.warning(f"[{self.label}] session expired, re-logging in...")
+                    self._cookie = None
+                    await self.login()
+                    continue
+                raw = await resp.text()
+                logger.debug(f"[{self.label}] POST {path} status={resp.status} raw='{raw[:200]}'")
+                if not raw.strip():
+                    logger.error(f"[{self.label}] empty response, status={resp.status}")
+                    return None
+                return json.loads(raw)
+            except Exception as e:
+                logger.error(f"[{self.label}] POST exception: {e}")
                 return None
-            return json.loads(raw)
-        except Exception as e:
-            logger.error(f"xui POST exception: {e}")
-            return None
-    return None
+        return None
 
+_fi_base = _build_base(config.PANEL_HOST, config.PANEL_PORT, config.PANEL_BASE_PATH)
+_nl_base = _build_base(config.PANEL_NL_HOST, config.PANEL_NL_PORT, config.PANEL_NL_BASE_PATH)
 
-# --- Маппинг регион → inbound IDs ---
-# Формат: region_code -> (desktop_inbound_id, mobile_inbound_id)
+_panels: dict[str, _PanelSession] = {
+    "fi": _PanelSession(_fi_base, config.PANEL_USER, config.PANEL_PASS, "FI"),
+    "nl": _PanelSession(_nl_base, config.PANEL_NL_USER, config.PANEL_NL_PASS, "NL"),
+}
+
+# Маппинг регион → (desktop_inbound_id, mobile_inbound_id)
 REGION_INBOUNDS: dict[str, tuple[int, int]] = {
     "fi": (config.INBOUND_ID, config.INBOUND_MOBILE_ID),
-    # "nl": (config.INBOUND_NL_ID, config.INBOUND_NL_MOBILE_ID),  # раскомментировать при добавлении NL
+    "nl": (config.INBOUND_NL_ID, config.INBOUND_NL_MOBILE_ID),
 }
 
 REGION_LABELS = {
@@ -109,11 +111,22 @@ REGION_LABELS = {
     "nl": "🇳🇱 Netherlands",
 }
 
+def _sub_link(email: str, region: str) -> str:
+    if region == "nl":
+        return f"{config.SUB_NL_HOST}:{config.SUB_NL_PORT}/sub/{email}"
+    return f"{config.SUB_HOST}:{config.SUB_PORT}/sub/{email}"
+
+
+async def close_session() -> None:
+    """Закрыть все сессии (вызывается при shutdown бота)."""
+    for panel in _panels.values():
+        await panel.close()
 
 async def create_client(email: str, days: int, devices_limit: int = 3,
                         region: str = "fi") -> dict | None:
     inbounds = REGION_INBOUNDS.get(region)
-    if not inbounds:
+    panel = _panels.get(region)
+    if not inbounds or not panel:
         logger.error(f"Unknown region: {region}")
         return None
 
@@ -141,20 +154,20 @@ async def create_client(email: str, days: int, devices_limit: int = 3,
             }),
         }
 
-    url = f"{BASE}/panel/api/inbounds/addClient"
+    url = "/panel/api/inbounds/addClient"
 
     # Desktop
-    data1 = await _post_with_reauth(url, _client_payload(desktop_inbound, email))
+    data1 = await panel.post(url, _client_payload(desktop_inbound, email))
     if not data1 or not data1.get("success"):
-        logger.error(f"xui addClient desktop failed: {data1}")
+        logger.error(f"[{region.upper()}] xui addClient desktop failed: {data1}")
         return None
 
     # Mobile
-    data2 = await _post_with_reauth(url, _client_payload(mobile_inbound, f"{email}m"))
+    data2 = await panel.post(url, _client_payload(mobile_inbound, f"{email}m"))
     if not data2 or not data2.get("success"):
-        logger.warning(f"xui addClient mobile failed: {data2} (desktop OK)")
+        logger.warning(f"[{region.upper()}] xui addClient mobile failed: {data2} (desktop OK)")
 
-    sub_link = f"{config.SUB_HOST}:{config.SUB_PORT}/sub/{email}"
+    sub_link = _sub_link(email, region)
     return {"client_id": client_id, "email": email, "sub_link": sub_link}
 
 
@@ -163,7 +176,8 @@ async def update_client_expiry(client_id: str, email: str,
                                 region: str = "fi") -> bool:
     new_expire = current_expire_ms + extra_days * 86_400_000
     inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_ID, config.INBOUND_MOBILE_ID))
-    url = f"{BASE}/panel/api/inbounds/updateClient/{client_id}"
+    panel = _panels.get(region, _panels["fi"])
+    url = f"/panel/api/inbounds/updateClient/{client_id}"
     results = []
     for inbound_id in inbounds:
         payload = {
@@ -173,7 +187,7 @@ async def update_client_expiry(client_id: str, email: str,
                 "expiryTime": new_expire, "enable": True, "flow": "xtls-rprx-vision",
             }]}),
         }
-        data = await _post_with_reauth(url, payload)
+        data = await panel.post(url, payload)
         results.append(bool(data and data.get("success")))
     return any(results)
 
@@ -181,7 +195,8 @@ async def update_client_expiry(client_id: str, email: str,
 async def update_client_ip_limit(client_id: str, email: str, limit: int,
                                   region: str = "fi") -> bool:
     inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_ID, config.INBOUND_MOBILE_ID))
-    url = f"{BASE}/panel/api/inbounds/updateClient/{client_id}"
+    panel = _panels.get(region, _panels["fi"])
+    url = f"/panel/api/inbounds/updateClient/{client_id}"
     results = []
     for inbound_id in inbounds:
         payload = {
@@ -191,33 +206,35 @@ async def update_client_ip_limit(client_id: str, email: str, limit: int,
                 "limitIp": limit, "enable": True, "flow": "xtls-rprx-vision",
             }]}),
         }
-        data = await _post_with_reauth(url, payload)
+        data = await panel.post(url, payload)
         results.append(bool(data and data.get("success")))
     return any(results)
 
 
-async def get_client_traffic(email: str) -> dict | None:
-    s = await get_session()
-    headers = await _headers()
+async def get_client_traffic(email: str, region: str = "fi") -> dict | None:
+    panel = _panels.get(region, _panels["fi"])
+    s = await panel.get_session()
+    headers = await panel._headers()
     try:
         resp = await s.get(
-            f"{BASE}/panel/api/inbounds/getClientTraffics/{email}",
+            f"{panel.base}/panel/api/inbounds/getClientTraffics/{email}",
             headers=headers,
         )
         data = await resp.json()
         if data.get("success"):
             return data.get("obj")
     except Exception as e:
-        logger.warning(f"get_client_traffic error: {e}")
+        logger.warning(f"get_client_traffic error [{region}]: {e}")
     return None
 
 
-async def get_online_count(email: str) -> int | None:
-    s = await get_session()
-    headers = await _headers()
+async def get_online_count(email: str, region: str = "fi") -> int | None:
+    panel = _panels.get(region, _panels["fi"])
+    s = await panel.get_session()
+    headers = await panel._headers()
     try:
         resp = await s.post(
-            f"{BASE}/panel/api/inbounds/clientIps/{email}",
+            f"{panel.base}/panel/api/inbounds/clientIps/{email}",
             headers=headers,
         )
         if resp.status != 200:
@@ -232,5 +249,12 @@ async def get_online_count(email: str) -> int | None:
             ips = [ip.strip() for ip in str(obj).split("\n") if ip.strip()]
             return len(ips)
     except Exception as e:
-        logger.warning(f"get_online_count failed for {email}: {e}")
+        logger.warning(f"get_online_count failed for {email} [{region}]: {e}")
     return None
+
+
+# Обратная совместимость (старые вызовы без session)
+# login / _post_with_reauth / SESSION_COOKIE и т.д. больше не нужны,
+# но если где-то импортируется напрямую , оставлю загрушку:
+async def login():
+    return await _panels["fi"].login()

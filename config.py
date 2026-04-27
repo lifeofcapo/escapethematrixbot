@@ -14,6 +14,7 @@ class Config:
     REQUIRED_CHANNEL_URL: str = os.getenv("REQUIRED_CHANNEL_URL", "https://t.me/EscapeTheMatrixVPN")
     SITE_URL: str = "https://escapethematrix.to"
     FAQ_URL: str = os.getenv("FAQ_URL", "https://telegra.ph/VPN-FAQ-04-12")  
+
     PANEL_HOST: str = os.getenv("PANEL_HOST", "https://vpn.escapethematrix.to")
     PANEL_PORT: int = int(os.getenv("PANEL_PORT", "2053"))
     PANEL_USER: str = os.getenv("PANEL_USER", "")
@@ -24,12 +25,23 @@ class Config:
     SUB_PORT: int = 2096
     INBOUND_ID: int = int(os.getenv("INBOUND_ID", "1")) 
     INBOUND_MOBILE_ID: int = int(os.getenv("INBOUND_MOBILE_ID", "2"))
+
+
+    INBOUND_NL_ID: int = int(os.getenv("INBOUND_NL_ID", ""))
+    INBOUND_NL_MOBILE_ID: int = int(os.getenv("INBOUND_NL_MOBILE_ID", ""))
+    PANEL_NL_HOST: str = os.getenv("PANEL_NL_HOST", "https://nl.escapethematrix.to")
+    PANEL_NL_PORT: int = int(os.getenv("PANEL_NL_PORT", "2053"))
+    PANEL_NL_USER: str = os.getenv("PANEL_NL_USER", "")
+    PANEL_NL_PASS: str = os.getenv("PANEL_NL_PASS", "")
+    PANEL_NL_BASE_PATH: str = os.getenv("PANEL_NL_BASE_PATH", "")
+    SUB_NL_HOST: str = os.getenv("SUB_NL_HOST", "https://nl.escapethematrix.to")
+    SUB_NL_PORT: int = int(os.getenv("SUB_NL_PORT", "2053"))
+
     MAX_DEVICES: int = 3
     EXTRA_DEVICES: int = 3       # доп. устройства за доплату
     EXTRA_DEVICES_PRICE: int = 50  # рублей
 
-    INBOUND_NL_ID: int = int(os.getenv("INBOUND_NL_ID", "0"))
-    INBOUND_NL_MOBILE_ID: int = int(os.getenv("INBOUND_NL_MOBILE_ID", "0"))
+    REFERRAL_BONUS_PERCENT: float = 25.0
 
     PLANS: dict = field(default_factory=lambda: {
         "1m": {"days": 30,  "price_rub": 100, "label_ru": "1 месяц",   "label_en": "1 month"},

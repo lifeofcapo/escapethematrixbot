@@ -4,10 +4,9 @@ from config import config
 from locales.texts import t
 from services.cryptobot import CRYPTO_ASSETS
 
-# добавить соответствующий нидерландский INBOUND_ID в config.py
 REGIONS = {
-    "fi": {"flag": "🇫🇮", "name_ru": "Финляндия", "name_en": "Finland",  "available": True},
-    "nl": {"flag": "🇳🇱", "name_ru": "Нидерланды", "name_en": "Netherlands", "available": False},
+    "fi": {"flag": "🇫🇮", "name_ru": "Финляндия",  "name_en": "Finland",      "available": True},
+    "nl": {"flag": "🇳🇱", "name_ru": "Нидерланды", "name_en": "Netherlands",  "available": True},
 }
 
 
@@ -56,7 +55,6 @@ def profile_keyboard(lang: str) -> InlineKeyboardMarkup:
             text=mini_app_label,
             web_app=WebAppInfo(url=config.MINI_APP_URL),
         )],
-        # инструкция по подключению
         [InlineKeyboardButton(
             text=t("btn_setup_guide", lang),
             callback_data="setup:choose_platform",
