@@ -46,6 +46,23 @@ async def admin_photo_broadcast(message: Message):
         reply_markup=broadcast_confirm_keyboard(lang, broadcast_id),
     )
 
+@router.message(IsAdmin(), F.text)
+async def admin_text_broadcast(message: Message):
+    lang = "ru"
+    text = message.text or ""
+
+    broadcast_id = str(uuid.uuid4())[:8]
+    _pending[broadcast_id] = {
+        "admin_id": message.from_user.id,
+        "type": "text",       
+        "text": text,
+    }
+
+    await message.answer(
+        t("broadcast_preview", lang),
+        reply_markup=broadcast_confirm_keyboard(lang, broadcast_id),
+    )
+
 @router.callback_query(IsAdmin(), F.data.startswith("broadcast:send:"))
 async def broadcast_send(callback: CallbackQuery, bot: Bot):
     lang = "ru"
@@ -60,26 +77,34 @@ async def broadcast_send(callback: CallbackQuery, bot: Bot):
     await callback.message.answer(t("broadcast_started", lang))
     await callback.answer()
 
-    # Получаем всех пользователей из БД
     async with get_pool().acquire() as conn:
         rows = await conn.fetch("SELECT id FROM users")
     user_ids = [row["id"] for row in rows]
 
     sent = 0
     failed = 0
+    is_photo = "photo_id" in pending
+
     for uid in user_ids:
         try:
-            await bot.send_photo(
-                chat_id=uid,
-                photo=pending["photo_id"],
-                caption=pending["caption"],
-                parse_mode="HTML",
-            )
+            if is_photo:
+                await bot.send_photo(
+                    chat_id=uid,
+                    photo=pending["photo_id"],
+                    caption=pending.get("caption", ""),
+                    parse_mode="HTML",
+                )
+            else:
+                await bot.send_message(
+                    chat_id=uid,
+                    text=pending["text"],
+                    parse_mode="HTML",
+                )
             sent += 1
         except Exception as e:
             logger.warning(f"Broadcast failed for {uid}: {e}")
             failed += 1
-        await asyncio.sleep(0.05)  # ~20 сообщений/сек, не превышаем лимит TG
+        await asyncio.sleep(0.05)
 
     await bot.send_message(
         pending["admin_id"],

@@ -53,7 +53,7 @@ def main_menu(lang: str) -> InlineKeyboardMarkup:
 
 
 def profile_keyboard(lang: str) -> InlineKeyboardMarkup:
-    mini_app_label = "🌐 Профиль (Mini App)" if lang == "ru" else "🌐 Profile (Mini App)"
+    mini_app_label = "🌐 Mini App"
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
             text=mini_app_label,
