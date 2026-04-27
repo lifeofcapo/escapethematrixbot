@@ -198,14 +198,14 @@ TEXTS = {
             "🌍 Регион: 🇫🇮 Финляндия\n"
             "🔗 Ваша ссылка подписки:\n"
             "<code>{sub_link}</code>\n\n"
-            "📱 Вставьте ссылку в приложение (v2rayNG, Streisand, Hiddify и др.)"
+            "📱 Вставьте ссылку в приложение (Happ, FLClashX, NekoBox и др.)"
         ),
         "en": (
             "✅ <b>Subscription activated!</b>\n\n"
             "🌍 Region: 🇫🇮 Finland\n"
             "🔗 Your subscription link:\n"
             "<code>{sub_link}</code>\n\n"
-            "📱 Paste the link into your VPN app (v2rayNG, Streisand, Hiddify, etc.)"
+            "📱 Paste the link into your VPN app (Happ, FLClashX, NekoBox, etc.)"
         ),
     },
     "payment_failed": {
@@ -354,12 +354,11 @@ TEXTS = {
             "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n"
             "Некоторые приложения платные или доступны только в иностранном App Store.\n\n"
             "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://apps.apple.com/app/shadowrocket/id932747118\">Shadowrocket</a> — лучший выбор, платный ($2.99)\n"
+            "• <a href=\"https://apps.apple.com/app/happ-proxy-utility/id6504287215\">Happ</a> — бесплатный, поддерживает Sing-Box\n\n"
             "• <a href=\"https://apps.apple.com/app/v2box-v2ray-client/id6446814690\">V2Box</a> — бесплатный, хороший\n"
             "• <a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a> — бесплатный, удобный\n"
             "• <a href=\"https://apps.apple.com/app/v2raytun/id6476628951\">V2RayTun</a> — бесплатный, лёгкий\n"
             "• <a href=\"https://apps.apple.com/app/npv-tunnel/id1629465476\">NPV Tunnel</a> — бесплатный\n"
-            "• <a href=\"https://apps.apple.com/app/happ-proxy-utility/id6504287215\">Happ</a> — бесплатный, поддерживает Sing-Box\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
@@ -367,12 +366,11 @@ TEXTS = {
             "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n"
             "Some apps are paid or available only in a foreign App Store.\n\n"
             "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://apps.apple.com/app/shadowrocket/id932747118\">Shadowrocket</a> — best choice, paid ($2.99)\n"
+            "• <a href=\"https://apps.apple.com/app/happ-proxy-utility/id6504287215\">Happ</a> — free, supports Sing-Box\n\n"
             "• <a href=\"https://apps.apple.com/app/v2box-v2ray-client/id6446814690\">V2Box</a> — free, solid\n"
             "• <a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a> — free, convenient\n"
             "• <a href=\"https://apps.apple.com/app/v2raytun/id6476628951\">V2RayTun</a> — free, lightweight\n"
             "• <a href=\"https://apps.apple.com/app/npv-tunnel/id1629465476\">NPV Tunnel</a> — free\n"
-            "• <a href=\"https://apps.apple.com/app/happ-proxy-utility/id6504287215\">Happ</a> — free, supports Sing-Box\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
@@ -383,13 +381,12 @@ TEXTS = {
             "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n"
             "Все приложения бесплатны и доступны на GitHub.\n\n"
             "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — красивый интерфейс, простая настройка ✅\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — удобный GUI, поддерживает sing-box ядро\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekobox-android/releases\">NekoBox</a> — форк NekoRay, активно развивается\n"
             "• <a href=\"https://play.google.com/store/apps/details?id=com.happ.vpn\">Happ</a> — кроссплатформенный клиент\n"
             "• <a href=\"https://github.com/2dust/v2rayN/releases\">v2rayN</a> — классика, широкий набор функций\n"
             "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — на базе Mihomo/Clash\n\n"
-            "💡 <b>Рекомендуем Hiddify</b> — самая простая установка для новичков.\n\n"
+            "💡 <b>Рекомендуем Happ</b> — самая простая установка для новичков.\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
@@ -397,13 +394,12 @@ TEXTS = {
             "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n"
             "All apps are free and available on GitHub.\n\n"
             "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — beautiful UI, simple setup ✅\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — great GUI, supports sing-box core\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekobox-android/releases\">NekoBox</a> — NekoRay fork, actively maintained\n"
             "• <a href=\"https://play.google.com/store/apps/details?id=com.happ.vpn\">Happ</a> — cross-platform client\n"
             "• <a href=\"https://github.com/2dust/v2rayN/releases\">v2rayN</a> — classic, feature-rich\n"
             "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — Mihomo/Clash based\n\n"
-            "💡 <b>We recommend Hiddify</b> — easiest setup for beginners.\n\n"
+            "💡 <b>We recommend Happ</b> — easiest setup for beginners.\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
@@ -413,22 +409,20 @@ TEXTS = {
             "🐧 <b>Подключение на Linux</b>\n\n"
             "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n\n"
             "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — GUI, AppImage, простая установка ✅\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — GUI, поддерживает sing-box ядро\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekobox-android/releases\">NekoBox</a> — форк NekoRay\n"
             "• <a href=\"https://sing-box.sagernet.org/installation/package-manager/\">sing-box CLI</a> — консольный клиент, максимальная гибкость\n\n"
-            "💡 <b>Рекомендуем Hiddify</b> — скачайте .AppImage и запустите без установки.\n\n"
+            "💡 <b>Рекомендуем FLClashX и NekoRay</b>.\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
             "🐧 <b>Linux Setup</b>\n\n"
             "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n\n"
             "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — GUI, AppImage, easy setup ✅\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — GUI, supports sing-box core\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekobox-android/releases\">NekoBox</a> — NekoRay fork\n"
             "• <a href=\"https://sing-box.sagernet.org/installation/package-manager/\">sing-box CLI</a> — console client, max flexibility\n\n"
-            "💡 <b>We recommend Hiddify</b> — download .AppImage and run without installation.\n\n"
+            "💡 <b>We recommend FLClashX and NekoRay</b>.\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
@@ -438,24 +432,22 @@ TEXTS = {
             "🍏 <b>Подключение на macOS</b>\n\n"
             "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n\n"
             "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — .dmg, простая установка ✅\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — поддерживает sing-box ядро\n"
             "• <a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a> — из Mac App Store, бесплатный\n"
             "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — Mihomo/Clash, .dmg\n"
             "• <a href=\"https://apps.apple.com/app/shadowrocket/id932747118\">Shadowrocket</a> — iOS-приложение, работает на Mac M1+\n\n"
-            "💡 <b>Рекомендуем Hiddify</b> — поддерживает Apple Silicon и Intel.\n\n"
+            "💡 <b>Рекомендуем NekoRay</b> — поддерживает Apple Silicon и Intel.\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
             "🍏 <b>macOS Setup</b>\n\n"
             "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n\n"
             "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — .dmg, easy setup ✅\n"
             "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — supports sing-box core\n"
             "• <a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a> — from Mac App Store, free\n"
             "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — Mihomo/Clash, .dmg\n"
             "• <a href=\"https://apps.apple.com/app/shadowrocket/id932747118\">Shadowrocket</a> — iOS app, works on Mac M1+\n\n"
-            "💡 <b>We recommend Hiddify</b> — supports Apple Silicon and Intel.\n\n"
+            "💡 <b>We recommend NekoRay</b> — supports Apple Silicon and Intel.\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
@@ -466,7 +458,6 @@ TEXTS = {
             "Для телевизоров важно использовать приложения с поддержкой пульта.\n\n"
             "📦 <b>Рекомендуемые приложения:</b>\n\n"
             "• <a href=\"https://github.com/2dust/v2rayNG/releases\">V2RayNG (APK)</a> — работает стабильно, можно установить вручную\n"
-            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — современный интерфейс, поддержка подписок ✅\n"
             "• <a href=\"https://github.com/SagerNet/sing-box/releases\">Sing-Box</a> — официальный клиент, но требует ручной настройки\n"
             "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — для продвинутых пользователей\n\n"
             "💡 <b>Совет:</b> чаще всего приложения нужно устанавливать через APK (sideload).\n\n"
@@ -478,7 +469,6 @@ TEXTS = {
             "For TVs, it's important to use apps with remote control support.\n\n"
             "📦 <b>Recommended apps:</b>\n\n"
             "• <a href=\"https://github.com/2dust/v2rayNG/releases\">V2RayNG (APK)</a> — stable, can be installed manually\n"
-            "• <a href=\"https://github.com/hiddify/hiddify-app/releases\">Hiddify</a> — modern UI, supports subscriptions ✅\n"
             "• <a href=\"https://github.com/SagerNet/sing-box/releases\">Sing-Box</a> — official client, but requires manual setup\n"
             "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — for advanced users\n\n"
             "💡 <b>Tip:</b> most apps are installed via APK (sideloading).\n\n"
