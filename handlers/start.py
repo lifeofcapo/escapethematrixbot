@@ -5,7 +5,7 @@ from config import config
 from database.db import get_user, create_user, count_referrals, get_balance, get_active_subscription
 from keyboards.kb import (
     lang_keyboard, subscribe_keyboard, main_menu,
-    back_keyboard, profile_keyboard, topup_method_keyboard, region_keyboard, region_label,
+    back_keyboard, profile_keyboard, topup_method_keyboard, region_keyboard, REGIONS, region_label,
 )
 from locales.texts import t
 from utils.helpers import generate_profile_key, format_datetime, days_left

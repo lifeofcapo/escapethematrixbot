@@ -12,7 +12,7 @@ from database.db import get_user, get_active_subscription, count_referrals
 from keyboards.kb import (
     profile_keyboard,
     setup_platform_keyboard,
-    setup_back_keyboard,
+    setup_back_keyboard, REGIONS,
     region_label,
 )
 from locales.texts import t

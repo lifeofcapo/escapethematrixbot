@@ -14,7 +14,7 @@ from database.db import (
 from keyboards.kb import (
     plans_keyboard, pay_now_keyboard, back_keyboard,
     topup_method_keyboard, topup_crypto_keyboard, confirm_purchase_keyboard,
-    region_keyboard, region_label,
+    region_keyboard, REGIONS, region_label,
     payment_success_keyboard,
 )
 from locales.texts import t
