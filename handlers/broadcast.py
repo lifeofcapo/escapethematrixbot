@@ -1,9 +1,10 @@
 import asyncio
 import logging
-import uuid
 
 from aiogram import Router, F, Bot
-from aiogram.filters import Filter
+from aiogram.filters import Command, Filter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 
 from config import config
@@ -14,8 +15,9 @@ from locales.texts import t
 logger = logging.getLogger(__name__)
 router = Router()
 
-# Временное хранилище ожидающих рассылок: {broadcast_id: {admin_id, photo_id, caption}}
-_pending: dict[str, dict] = {}
+
+class BroadcastStates(StatesGroup):
+    waiting_content = State()
 
 
 class IsAdmin(Filter):
@@ -23,98 +25,106 @@ class IsAdmin(Filter):
         user_id = event.from_user.id if isinstance(event, Message) else event.from_user.id
         return user_id in config.ADMIN_IDS
 
-@router.message(IsAdmin(), F.photo)
-async def admin_photo_broadcast(message: Message):
-    lang = "ru"
-    photo = message.photo[-1]  # наибольшее разрешение
+@router.message(IsAdmin(), Command("broadcast"))
+async def cmd_broadcast(message: Message, state: FSMContext):
+    await message.answer(
+        "📢 Отправьте текст или фото для рассылки.\n"
+        "Для отмены — /cancel"
+    )
+    await state.set_state(BroadcastStates.waiting_content)
+
+@router.message(IsAdmin(), Command("cancel"), BroadcastStates.waiting_content)
+async def cancel_broadcast(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer("🚫 Рассылка отменена. Бот работает в обычном режиме.")
+
+@router.message(IsAdmin(), BroadcastStates.waiting_content, F.photo)
+async def broadcast_photo_received(message: Message, state: FSMContext):
+    photo = message.photo[-1]
     caption = message.caption or ""
 
-    broadcast_id = str(uuid.uuid4())[:8]
-    _pending[broadcast_id] = {
-        "admin_id": message.from_user.id,
-        "photo_id": photo.file_id,
-        "caption": caption,
-    }
+    await state.update_data(
+        type="photo",
+        photo_id=photo.file_id,
+        caption=caption,
+    )
 
+    # Предпросмотр
     await message.answer_photo(
         photo=photo.file_id,
         caption=caption,
         parse_mode="HTML",
     )
     await message.answer(
-        t("broadcast_preview", lang),
-        reply_markup=broadcast_confirm_keyboard(lang, broadcast_id),
+        t("broadcast_preview", "ru"),
+        reply_markup=broadcast_confirm_keyboard("ru", broadcast_id="pending"),
     )
 
-@router.message(IsAdmin(), F.text)
-async def admin_text_broadcast(message: Message):
-    lang = "ru"
+
+@router.message(IsAdmin(), BroadcastStates.waiting_content, F.text)
+async def broadcast_text_received(message: Message, state: FSMContext):
     text = message.text or ""
 
-    broadcast_id = str(uuid.uuid4())[:8]
-    _pending[broadcast_id] = {
-        "admin_id": message.from_user.id,
-        "type": "text",       
-        "text": text,
-    }
-
-    await message.answer(
-        t("broadcast_preview", lang),
-        reply_markup=broadcast_confirm_keyboard(lang, broadcast_id),
+    await state.update_data(
+        type="text",
+        text=text,
     )
 
-@router.callback_query(IsAdmin(), F.data.startswith("broadcast:send:"))
-async def broadcast_send(callback: CallbackQuery, bot: Bot):
-    lang = "ru"
-    broadcast_id = callback.data.split(":")[2]
-    pending = _pending.pop(broadcast_id, None)
+    # Предпросмотр
+    await message.answer(text, parse_mode="HTML")
+    await message.answer(
+        t("broadcast_preview", "ru"),
+        reply_markup=broadcast_confirm_keyboard("ru", broadcast_id="pending"),
+    )
 
-    if not pending:
-        await callback.answer("Рассылка не найдена или уже отправлена.", show_alert=True)
+@router.callback_query(IsAdmin(), F.data == "broadcast:send:pending")
+async def broadcast_send(callback: CallbackQuery, bot: Bot, state: FSMContext):
+    data = await state.get_data()
+    if not data:
+        await callback.answer("Рассылка не найдена.", show_alert=True)
         return
 
     await callback.message.edit_reply_markup(reply_markup=None)
-    await callback.message.answer(t("broadcast_started", lang))
+    await callback.message.answer(t("broadcast_started", "ru"))
     await callback.answer()
-
     async with get_pool().acquire() as conn:
         rows = await conn.fetch("SELECT id FROM users")
     user_ids = [row["id"] for row in rows]
 
     sent = 0
     failed = 0
-    is_photo = "photo_id" in pending
+    is_photo = data.get("type") == "photo"
 
     for uid in user_ids:
         try:
             if is_photo:
                 await bot.send_photo(
                     chat_id=uid,
-                    photo=pending["photo_id"],
-                    caption=pending.get("caption", ""),
+                    photo=data["photo_id"],
+                    caption=data.get("caption", ""),
                     parse_mode="HTML",
                 )
             else:
                 await bot.send_message(
                     chat_id=uid,
-                    text=pending["text"],
+                    text=data["text"],
                     parse_mode="HTML",
                 )
             sent += 1
         except Exception as e:
             logger.warning(f"Broadcast failed for {uid}: {e}")
             failed += 1
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.05)  # лимит Telegram
 
     await bot.send_message(
-        pending["admin_id"],
-        t("broadcast_done", lang, sent=sent, failed=failed),
+        callback.from_user.id,
+        t("broadcast_done", "ru", sent=sent, failed=failed),
     )
-@router.callback_query(IsAdmin(), F.data.startswith("broadcast:cancel:"))
-async def broadcast_cancel(callback: CallbackQuery):
-    lang = "ru"
-    broadcast_id = callback.data.split(":")[2]
-    _pending.pop(broadcast_id, None)
+    await state.clear()
+
+@router.callback_query(IsAdmin(), F.data == "broadcast:cancel:pending")
+async def broadcast_cancel(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_reply_markup(reply_markup=None)
-    await callback.message.answer(t("broadcast_cancelled", lang))
+    await callback.message.answer(t("broadcast_cancelled", "ru"))
+    await state.clear()
     await callback.answer()
