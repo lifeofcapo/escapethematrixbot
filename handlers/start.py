@@ -184,23 +184,28 @@ async def menu_back(callback: CallbackQuery):
     await _send_main_menu(callback, lang, user["profile_key"], edit=True)
     await callback.answer()
 
-
 @router.message(Command("profile"))
 async def cmd_profile(message: Message):
     user = await get_user(message.from_user.id)
     if not user:
         return
     lang = user.get("language", "ru")
-    sub = await get_active_subscriptions(user["id"])
+    subs = await get_active_subscriptions(user["id"])
     referrals = await count_referrals(user["id"])
 
-    if sub:
-        expires = format_datetime(sub["expires_at"], lang)
-        d_left = days_left(sub["expires_at"])
-        sub_region_label = region_label(sub.get("region", "fi"), lang)
-        sub_info = t("sub_active", lang, expires=expires, days_left=d_left,
-                     limit=sub["devices_limit"], sub_link=sub["sub_link"],
-                     region_label=sub_region_label)
+    if subs:
+        sub_lines = []
+        for sub in subs:
+            expires = format_datetime(sub["expires_at"], lang)
+            d_left = days_left(sub["expires_at"])
+            sub_region_label = region_label(sub.get("region", "fi"), lang)
+            sub_lines.append(
+                f"✅ {sub_region_label}\n"
+                f"📅 {expires} ({d_left} дн.)\n"
+                f"📱 Устройств: {sub['devices_limit']}\n"
+                f"🔗 <code>{sub['sub_link']}</code>"
+            )
+        sub_info = "\n\n".join(sub_lines)
     else:
         sub_info = t("sub_none", lang)
 
@@ -211,7 +216,6 @@ async def cmd_profile(message: Message):
         parse_mode="HTML",
         disable_web_page_preview=True,
     )
-
 
 @router.message(Command("balance"))
 async def cmd_balance(message: Message):
