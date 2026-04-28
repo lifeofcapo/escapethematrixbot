@@ -79,7 +79,7 @@ async def main():
     dp.include_router(support.router)
     stop_event = asyncio.Event()     # Флаг для graceful shutdown
     scheduler_task = asyncio.create_task(run_scheduler(bot)) # Планировщик уведомлений об истечении подписок
-    internal_api_task = asyncio.create_task(start_internal_api()) 
+    internal_api_task = asyncio.create_task(start_internal_api(bot))
     loop = asyncio.get_running_loop() # (SIGINT = Ctrl+C, SIGTERM = systemd stop)
 
     def _handle_signal():

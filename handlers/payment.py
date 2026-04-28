@@ -478,10 +478,14 @@ async def topup_process_amount(message: Message, state: FSMContext, bot: Bot):
 
 async def _poll_topup_yookassa(bot: Bot, user_id: int, payment_id: str,
                                 amount: float, lang: str):
-    intervals = [20, 20, 30, 30, 60] + [60] * 20
+    intervals = [30, 60, 60, 120] + [120] * 10  # сокращаем — вебхук основной
     for delay in intervals:
         await asyncio.sleep(delay)
-        status = await check_yookassa_payment(payment_id)
+        try:
+            status = await check_yookassa_payment(payment_id)
+        except Exception as e:
+            logger.warning(f"YooKassa poll error ({payment_id}): {e}, retrying...")
+            continue
         if status == "succeeded":
             payment = await get_payment_by_provider_id(payment_id)
             if payment and payment["status"] != "paid":
@@ -490,9 +494,8 @@ async def _poll_topup_yookassa(bot: Bot, user_id: int, payment_id: str,
                 balance = await get_balance(user_id)
                 user = await get_user(user_id)
                 if user and user.get("referred_by"):
-                    referrer_id = user["referred_by"]
                     bonus = amount * config.REFERRAL_BONUS_PERCENT / 100.0
-                    await update_balance(referrer_id, bonus)
+                    await update_balance(user["referred_by"], bonus)
                 await bot.send_message(
                     user_id,
                     t("balance_topped", lang, amount=amount, balance=f"{balance:.2f}"),
