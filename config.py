@@ -27,8 +27,8 @@ class Config:
     INBOUND_MOBILE_ID: int = int(os.getenv("INBOUND_MOBILE_ID", "2"))
 
 
-    INBOUND_NL_ID: int = int(os.getenv("INBOUND_NL_ID", ""))
-    INBOUND_NL_MOBILE_ID: int = int(os.getenv("INBOUND_NL_MOBILE_ID", ""))
+    INBOUND_NL_ID: int = int(os.getenv("INBOUND_NL_ID", "1"))
+    INBOUND_NL_MOBILE_ID: int = int(os.getenv("INBOUND_NL_MOBILE_ID", "2"))
     PANEL_NL_HOST: str = os.getenv("PANEL_NL_HOST", "https://nl.escapethematrix.to")
     PANEL_NL_PORT: int = int(os.getenv("PANEL_NL_PORT", "2053"))
     PANEL_NL_USER: str = os.getenv("PANEL_NL_USER", "")
