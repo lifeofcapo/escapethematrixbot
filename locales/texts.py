@@ -254,6 +254,10 @@ TEXTS = {
         "ru": (
             "👥 <b>Реферальная программа</b>\n\n"
             "Приглашайте друзей и получайте бонусы!\n\n"
+            "💰 <b>Как это работает:</b>\n"
+            "Каждый раз, когда приглашённый друг пополняет баланс,\n"
+            "вы получаете <b>25%</b> от суммы пополнения себе на баланс.\n"
+            "Например: друг пополнил 100₽ → вам +25₽ 🎉\n\n"
             "🔗 Ваша реферальная ссылка:\n"
             "<code>{ref_link}</code>\n\n"
             "👥 Приглашено пользователей: <b>{referrals}</b>"
@@ -261,6 +265,10 @@ TEXTS = {
         "en": (
             "👥 <b>Referral Program</b>\n\n"
             "Invite friends and earn bonuses!\n\n"
+            "💰 <b>How it works:</b>\n"
+            "Every time your invited friend tops up their balance,\n"
+            "you receive <b>25%</b> of the top-up amount to your balance.\n"
+            "Example: friend tops up 100₽ → you get +25₽ 🎉\n\n"
             "🔗 Your referral link:\n"
             "<code>{ref_link}</code>\n\n"
             "👥 Users invited: <b>{referrals}</b>"

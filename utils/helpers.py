@@ -7,7 +7,7 @@ def generate_profile_key(length: int = 24) -> str:
     return "".join(secrets.choice(alphabet) for _ in range(length))
 
 def generate_sub_email(user_id: int) -> str:
-    rand = "".join(secrets.choice(string.ascii_lowercase + string.digits) for _ in range(4))
+    rand = "".join(secrets.choice(string.ascii_lowercase + string.digits) for _ in range(8))
     return f"fi{rand}"
 
 
