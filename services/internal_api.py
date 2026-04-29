@@ -12,6 +12,7 @@ from database.db import (
 )
 from utils.helpers import days_left
 from config import config
+from services.webhook_registry import mark_handled as _mark_webhook_handled
 
 logger = logging.getLogger(__name__)
 
@@ -89,14 +90,12 @@ async def handle_yookassa_webhook(request: web.Request) -> web.Response:
     logger.info(f"YooKassa webhook received: event={event} payment_id={payment_id}")
 
     if event != "payment.succeeded":
-        # Остальные события (refund и т.д.) пока игнорируем, но отвечаем 200
         return web.Response(status=200)
 
     if not payment_id:
         logger.error("YooKassa webhook: no payment id in object")
         return web.Response(status=400)
 
-    # Достаём user_id из metadata платежа
     metadata = obj.get("metadata", {})
     try:
         user_id = int(metadata.get("user_id", 0))
@@ -105,14 +104,13 @@ async def handle_yookassa_webhook(request: web.Request) -> web.Response:
 
     if not user_id:
         logger.error(f"YooKassa webhook: no user_id in metadata for payment {payment_id}")
-        return web.Response(status=200)  # 200 чтобы YooKassa не ретраила
+        return web.Response(status=200)
 
     amount = float(obj.get("amount", {}).get("value", 0))
     if amount <= 0:
         logger.error(f"YooKassa webhook: invalid amount for payment {payment_id}")
         return web.Response(status=200)
 
-    # Идемпотентность — не начисляем дважды
     payment = await get_payment_by_provider_id(payment_id)
     if not payment:
         logger.warning(f"YooKassa webhook: payment {payment_id} not found in DB, skipping")
@@ -120,9 +118,10 @@ async def handle_yookassa_webhook(request: web.Request) -> web.Response:
 
     if payment["status"] == "paid":
         logger.info(f"YooKassa webhook: payment {payment_id} already processed, skipping")
+        # Всё равно сигналим — на случай если таск ещё крутится
+        _mark_webhook_handled(payment_id)
         return web.Response(status=200)
 
-    # Начисляем баланс
     await mark_payment_paid(payment_id)
     await update_balance(user_id, amount)
     balance = await get_balance(user_id)
@@ -134,7 +133,9 @@ async def handle_yookassa_webhook(request: web.Request) -> web.Response:
         await update_balance(user["referred_by"], bonus)
         logger.info(f"Referral bonus {bonus}₽ → user {user['referred_by']}")
 
-    # Уведомляем пользователя
+    # ↓ Сигналим polling-таску: вебхук сработал, можно выходить
+    _mark_webhook_handled(payment_id)
+
     if _bot:
         from locales.texts import t
         lang = user.get("language", "ru") if user else "ru"

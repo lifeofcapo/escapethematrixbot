@@ -314,8 +314,26 @@ TEXTS = {
     "btn_setup_guide":  {"ru": "📲 Как подключиться", "en": "📲 Setup guide"},
  
     "setup_choose_platform": {
-        "ru": "📲 <b>Выберите вашу платформу:</b>",
-        "en": "📲 <b>Choose your platform:</b>",
+        "ru": (
+            "📲 <b>Как подключить VPN</b>\n\n"
+            "1️⃣ Скачай приложение под свою платформу (кнопки ниже)\n"
+            "   Рекомендуем <b>Happ</b> — работает на всех устройствах\n\n"
+            "2️⃣ Открой приложение → нажми <b>«+»</b>\n\n"
+            "3️⃣ Выбери <b>«Импорт по ссылке»</b> и вставь\n"
+            "   ссылку подписки из раздела 👤 Профиль\n\n"
+            "4️⃣ Нажми <b>«Добавить»</b> — готово ✅\n\n"
+            "👇 Выбери свою платформу:"
+        ),
+        "en": (
+            "📲 <b>How to connect VPN</b>\n\n"
+            "1️⃣ Download an app for your platform (buttons below)\n"
+            "   We recommend <b>Happ</b> — works on all devices\n\n"
+            "2️⃣ Open the app → tap <b>«+»</b>\n\n"
+            "3️⃣ Choose <b>«Import from URL»</b> and paste\n"
+            "   your subscription link from 👤 Profile\n\n"
+            "4️⃣ Tap <b>«Add»</b> — you're in ✅\n\n"
+            "👇 Choose your platform:"
+        ),
     },
  
     "setup_android": {

@@ -5,6 +5,7 @@ from aiogram.types import CallbackQuery, Message, FSInputFile, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
+from services.webhook_registry import get_or_create as _webhook_event, cleanup as _webhook_cleanup
 from config import config
 from database.db import (
     get_user, get_active_subscription, create_payment, get_payment_by_provider_id,
@@ -478,14 +479,34 @@ async def topup_process_amount(message: Message, state: FSMContext, bot: Bot):
 
 async def _poll_topup_yookassa(bot: Bot, user_id: int, payment_id: str,
                                 amount: float, lang: str):
-    intervals = [30, 60, 60, 120] + [120] * 10  # сокращаем — вебхук основной
+    from services.webhook_registry import get_or_create as _webhook_event, cleanup as _webhook_cleanup
+ 
+    webhook_event = _webhook_event(payment_id)
+    try:
+        await asyncio.wait_for(asyncio.shield(webhook_event.wait()), timeout=180)
+        logger.info(f"YooKassa poll: webhook fired for {payment_id}, exiting poll task early")
+        _webhook_cleanup(payment_id)
+        return
+    except asyncio.TimeoutError:
+        pass  # вебхук не пришёл за 3 минуты — поллим сами
+ 
+    # Вебхук не пришёл, поллим вручную (резервный путь)
+    intervals = [30, 60, 60, 120] + [120] * 5
     for delay in intervals:
+        # Перед каждым sleep проверяем, что вебхук пришёл
+        if webhook_event.is_set():
+            logger.info(f"YooKassa poll: webhook fired during polling for {payment_id}, stopping")
+            _webhook_cleanup(payment_id)
+            return
+ 
         await asyncio.sleep(delay)
+ 
         try:
             status = await check_yookassa_payment(payment_id)
         except Exception as e:
             logger.warning(f"YooKassa poll error ({payment_id}): {e}, retrying...")
             continue
+ 
         if status == "succeeded":
             payment = await get_payment_by_provider_id(payment_id)
             if payment and payment["status"] != "paid":
@@ -494,15 +515,20 @@ async def _poll_topup_yookassa(bot: Bot, user_id: int, payment_id: str,
                 balance = await get_balance(user_id)
                 user = await get_user(user_id)
                 if user and user.get("referred_by"):
-                    bonus = amount * config.REFERRAL_BONUS_PERCENT / 100.0
+                    bonus = round(amount * config.REFERRAL_BONUS_PERCENT / 100.0, 2)
                     await update_balance(user["referred_by"], bonus)
                 await bot.send_message(
                     user_id,
                     t("balance_topped", lang, amount=amount, balance=f"{balance:.2f}"),
                 )
+            _webhook_cleanup(payment_id)
             return
         elif status in ("canceled", "failed"):
+            _webhook_cleanup(payment_id)
             return
+ 
+    _webhook_cleanup(payment_id)
+
 
 
 async def _poll_topup_crypto(bot: Bot, user_id: int, invoice_id: str,

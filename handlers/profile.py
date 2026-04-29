@@ -21,11 +21,11 @@ from utils.helpers import format_datetime, days_left
 logger = logging.getLogger(__name__)
 router = Router()
 
+_GUIDE_PHOTO_FILE_ID: str | None = None
 _PHOTO_FILE_IDS: dict[str, str] = {}
 PHOTOS = {
     "profile": "assets/profile.png",
 }
-
 SETUP_PLATFORMS = {"android", "ios", "windows", "macos", "linux", "tv"}
 
 async def _send_profile_photo(callback, text, kb):
@@ -151,25 +151,42 @@ async def change_language(callback: CallbackQuery):
 
 @router.callback_query(F.data == "setup:choose_platform")
 async def setup_choose_platform(callback: CallbackQuery):
+    global _GUIDE_PHOTO_FILE_ID
     user = await get_user(callback.from_user.id)
     lang = user.get("language", "ru") if user else "ru"
 
     text = t("setup_choose_platform", lang)
     kb = setup_platform_keyboard(lang)
 
-    try:
-        await callback.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
-    except Exception:
-        try:
-            await callback.message.edit_caption(caption=text, reply_markup=kb, parse_mode="HTML")
-        except Exception:
-            try:
-                await callback.message.delete()
-            except Exception:
-                pass
-            await callback.message.answer(text, reply_markup=kb, parse_mode="HTML")
+    import os
+    guide_path = "assets/happ_guide.jpg"
+    has_photo = os.path.exists(guide_path)
 
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+
+
+    if has_photo:
+        photo = _GUIDE_PHOTO_FILE_ID if _GUIDE_PHOTO_FILE_ID else FSInputFile(guide_path)
+        try:
+            msg = await callback.message.answer_photo(
+                photo=photo,
+                caption=text,
+                reply_markup=kb,
+                parse_mode="HTML",
+            )
+            if not _GUIDE_PHOTO_FILE_ID and msg.photo:
+                _GUIDE_PHOTO_FILE_ID = msg.photo[-1].file_id
+        except Exception as e:
+            logger.warning(f"setup_choose_platform: photo send failed ({e}), falling back to text")
+            await callback.message.answer(text, reply_markup=kb, parse_mode="HTML")
+    else:
+        await callback.message.answer(text, reply_markup=kb, parse_mode="HTML")
+ 
     await callback.answer()
+
 
 @router.callback_query(F.data.startswith("setup:") & ~F.data.in_({"setup:choose_platform"}))
 async def setup_platform_detail(callback: CallbackQuery):
