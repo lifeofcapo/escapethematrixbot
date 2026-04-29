@@ -237,7 +237,7 @@ TEXTS = {
             "📩 <a href=\"https://t.me/lifeofcapo\">Напишите нам напрямую</a>\n\n"
             "💬 Или оставьте сообщение в канале:\n"
             "<b>EscapeTheMatrix VPN</b>\n\n"
-            "⏱ Обычно отвечаем в течение 30 минут."
+            "⏱ Обычно отвечаем в течение 10 минут."
         ),
         "en": (
             "🆘 <b>EscapeTheMatrix VPN Support</b>\n\n"
@@ -246,7 +246,7 @@ TEXTS = {
             "📩 <a href=\"https://t.me/lifeofcapo\">Write to us directly</a>\n\n"
             "💬 Or leave a message in the channel:\n"
             "<b>EscapeTheMatrix VPN</b>\n\n"
-            "⏱ We usually respond within 30 minutes."
+            "⏱ We usually respond within 10 minutes."
         ),
     },
 
