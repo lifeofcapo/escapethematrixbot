@@ -198,6 +198,7 @@ TEXTS = {
             "🌍 Регион: {region_label}\n"
             "🔗 Ваша ссылка подписки:\n"
             "<code>{sub_link}</code>\n\n"
+            "Скопируйте ссылку одним нажатием\n\n"
             "📱 Вставьте ссылку в приложение (Happ, FLClashX, NekoBox и др.)"
         ),
         "en": (
@@ -205,6 +206,7 @@ TEXTS = {
             "🌍 Region: {region_label}\n"
             "🔗 Your subscription link:\n"
             "<code>{sub_link}</code>\n\n"
+            "Copy the link by one click\n\n"
             "📱 Paste the link into your VPN app (Happ, FLClashX, NekoBox, etc.)"
         ),
     },
