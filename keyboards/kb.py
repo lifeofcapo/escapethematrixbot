@@ -6,7 +6,7 @@ from services.cryptobot import CRYPTO_ASSETS
 
 REGIONS = {
     "fi": {"flag": "🇫🇮", "name_ru": "Финляндия",  "name_en": "Finland",      "available": True},
-    "nl": {"flag": "🇳🇱", "name_ru": "Нидерланды", "name_en": "Netherlands",  "available": False},
+    "nl": {"flag": "🇳🇱", "name_ru": "Нидерланды", "name_en": "Netherlands",  "available": True},
 }
 
 def region_label(region_id: str, lang: str) -> str:
