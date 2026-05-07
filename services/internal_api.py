@@ -150,6 +150,126 @@ async def handle_yookassa_webhook(request: web.Request) -> web.Response:
     logger.info(f"YooKassa webhook: +{amount}₽ → user {user_id}, new balance={balance:.2f}")
     return web.Response(status=200)
 
+async def handle_web_subscription(request: web.Request) -> web.Response:
+    """
+    POST /internal/web-subscription
+    Body: { "user_id": 123, "days": 30, "amount": 100 }
+    Header: X-Internal-Secret: ...
+    """
+    if not _auth(request):
+        return web.json_response({"error": "forbidden"}, status=403)
+
+    try:
+        body = await request.json()
+    except Exception:
+        return web.json_response({"error": "invalid_body"}, status=400)
+
+    user_id = body.get("user_id")
+    days = body.get("days")
+    amount = body.get("amount")
+    requested_region = body.get("region", "fi")  
+
+    if not user_id or not days or not amount:
+        return web.json_response({"error": "missing_params"}, status=400)
+
+    try:
+        user_id = int(user_id)
+        days = int(days)
+        amount = float(amount)
+        region = "nl" if requested_region == "nl" else "fi"
+    except (ValueError, TypeError):
+        return web.json_response({"error": "invalid_params"}, status=400)
+    user = await get_user(user_id)
+    if not user:
+        return web.json_response({"error": "user_not_found"}, status=404)
+    sub = await get_active_subscription(user_id)
+
+    from services import xui 
+
+    if sub and sub.get("xui_client_id") and sub.get("xui_email"):
+        from datetime import timezone
+        client_id = sub["xui_client_id"]
+        email = sub["xui_email"]
+        region = sub.get("region", "fi")  # <-- всегда из БД, игнор requested_region
+
+        expires_at = sub["expires_at"]
+        if hasattr(expires_at, "timestamp"):
+            current_expire_ms = int(expires_at.timestamp() * 1000)
+        else:
+            from datetime import datetime
+            current_expire_ms = int(datetime.fromisoformat(str(expires_at)).timestamp() * 1000)
+
+        ok = await xui.update_client_expiry(
+            client_id=client_id,
+            email=email,
+            extra_days=days,
+            current_expire_ms=current_expire_ms,
+            region=region,
+        )
+
+        if not ok:
+            logger.error(f"web-subscription: xui renew failed for user {user_id}")
+            return web.json_response({"error": "xui_error"}, status=502)
+
+        from datetime import datetime, timezone as tz, timedelta
+        base = expires_at if hasattr(expires_at, "timestamp") else datetime.fromisoformat(str(expires_at))
+        if base.tzinfo is None:
+            base = base.replace(tzinfo=tz.utc)
+        new_expiry = base + timedelta(days=days)
+
+        from database.db import get_pool  # используй свою функцию получения пула
+        db = get_pool()
+        async with db.acquire() as conn:
+            await conn.execute(
+                "UPDATE subscriptions SET expires_at = $1 WHERE id = $2",
+                new_expiry, sub["id"]
+            )
+
+        logger.info(f"web-subscription: renewed {days}d for user {user_id}, new expiry={new_expiry}")
+        return web.json_response({"ok": True, "action": "renew", "expires_at": new_expiry.isoformat()})
+
+    else:
+        import uuid as _uuid
+        email = f"web{user_id}_{_uuid.uuid4().hex[:6]}"
+
+        result = await xui.create_client(
+            email=email,
+            days=days,
+            devices_limit=3,
+            region=region,
+        )
+
+        if not result:
+            logger.error(f"web-subscription: xui create_client failed for user {user_id}")
+            return web.json_response({"error": "xui_error"}, status=502)
+
+        client_id = result["client_id"]
+        sub_link = result["sub_link"]
+
+        from datetime import datetime, timezone as tz, timedelta
+        now = datetime.now(tz.utc)
+        expires_at = now + timedelta(days=days)
+
+        from database.db import get_pool
+        db = get_pool()
+        async with db.acquire() as conn:
+            await conn.execute(
+                """INSERT INTO subscriptions
+                   (user_id, xui_client_id, xui_email, sub_link, plan, devices_limit,
+                    started_at, expires_at, is_active, region)
+                   VALUES ($1, $2, $3, $4, 'web', 3, $5, $6, TRUE, $7)""",
+                user_id, client_id, email, sub_link, now, expires_at, region
+            )
+
+        logger.info(f"web-subscription: created for user {user_id}, client_id={client_id}, region={region}")
+        return web.json_response({
+            "ok": True,
+            "action": "new",
+            "client_id": client_id,
+            "sub_link": sub_link,
+            "expires_at": expires_at.isoformat(),
+        })
+
 async def start_internal_api(bot=None):
     """Запускается как asyncio.Task внутри основного event loop бота."""
     global _bot
@@ -158,6 +278,7 @@ async def start_internal_api(bot=None):
     app = web.Application()
     app.router.add_get("/internal/profile/{user_id}", handle_profile)
     app.router.add_post("/webhook/yookassa", handle_yookassa_webhook)
+    app.router.add_post("/internal/web-subscription", handle_web_subscription)
 
     runner = web.AppRunner(app)
     await runner.setup()
