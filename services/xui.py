@@ -179,16 +179,35 @@ async def update_client_expiry(client_id: str, email: str,
     panel = _panels.get(region, _panels["fi"])
     url = f"/panel/api/inbounds/updateClient/{client_id}"
     results = []
-    for inbound_id in inbounds:
-        payload = {
-            "id": inbound_id,
-            "settings": json.dumps({"clients": [{
-                "id": client_id, "email": email,
-                "expiryTime": new_expire, "enable": True, "flow": "xtls-rprx-vision",
-            }]}),
-        }
-        data = await panel.post(url, payload)
-        results.append(bool(data and data.get("success")))
+
+    desktop_inbound, mobile_inbound = inbounds
+
+    payload_desktop = {
+        "id": desktop_inbound,
+        "settings": json.dumps({"clients": [{
+            "id": client_id,
+            "email": email,          
+            "expiryTime": new_expire,
+            "enable": True,
+            "flow": "xtls-rprx-vision",
+        }]}),
+    }
+    data = await panel.post(url, payload_desktop)
+    results.append(bool(data and data.get("success")))
+
+    payload_mobile = {
+        "id": mobile_inbound,
+        "settings": json.dumps({"clients": [{
+            "id": client_id,
+            "email": f"{email}m",     
+            "expiryTime": new_expire,
+            "enable": True,
+            "flow": "xtls-rprx-vision",
+        }]}),
+    }
+    data = await panel.post(url, payload_mobile)
+    results.append(bool(data and data.get("success")))
+
     return any(results)
 
 
@@ -197,17 +216,26 @@ async def update_client_ip_limit(client_id: str, email: str, limit: int,
     inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_ID, config.INBOUND_MOBILE_ID))
     panel = _panels.get(region, _panels["fi"])
     url = f"/panel/api/inbounds/updateClient/{client_id}"
+    desktop_inbound, mobile_inbound = inbounds
     results = []
-    for inbound_id in inbounds:
+
+    for inbound_id, email_val in [
+        (desktop_inbound, email),
+        (mobile_inbound, f"{email}m"),
+    ]:
         payload = {
             "id": inbound_id,
             "settings": json.dumps({"clients": [{
-                "id": client_id, "email": email,
-                "limitIp": limit, "enable": True, "flow": "xtls-rprx-vision",
+                "id": client_id,
+                "email": email_val,
+                "limitIp": limit,
+                "enable": True,
+                "flow": "xtls-rprx-vision",
             }]}),
         }
         data = await panel.post(url, payload)
         results.append(bool(data and data.get("success")))
+
     return any(results)
 
 
