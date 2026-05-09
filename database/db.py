@@ -56,7 +56,7 @@ async def init_db() -> None:
             sub_link        TEXT,
             plan            TEXT,
             region          TEXT        NOT NULL DEFAULT 'fi',
-            devices_limit   INTEGER     NOT NULL DEFAULT 3,
+            devices_limit   INTEGER     NOT NULL DEFAULT 4,
             started_at      TIMESTAMPTZ,
             expires_at      TIMESTAMPTZ,
             is_active       BOOLEAN     NOT NULL DEFAULT TRUE
@@ -201,7 +201,7 @@ async def get_active_subscriptions(user_id: int) -> list[dict]:
 
 async def create_subscription(user_id: int, xui_client_id: str, xui_email: str,
                                sub_link: str, plan: str, days: int,
-                               devices_limit: int = 3, region: str = "fi") -> int:
+                               devices_limit: int = 4, region: str = "fi") -> int:
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=days)
     async with get_pool().acquire() as conn:

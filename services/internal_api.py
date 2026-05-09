@@ -235,7 +235,7 @@ async def handle_web_subscription(request: web.Request) -> web.Response:
         result = await xui.create_client(
             email=email,
             days=days,
-            devices_limit=3,
+            devices_limit=4,
             region=region,
         )
 
@@ -257,7 +257,7 @@ async def handle_web_subscription(request: web.Request) -> web.Response:
                 """INSERT INTO subscriptions
                    (user_id, xui_client_id, xui_email, sub_link, plan, devices_limit,
                     started_at, expires_at, is_active, region)
-                   VALUES ($1, $2, $3, $4, 'web', 3, $5, $6, TRUE, $7)""",
+                   VALUES ($1, $2, $3, $4, 'web', 4, $5, $6, TRUE, $7)""",
                 user_id, client_id, email, sub_link, now, expires_at, region
             )
 

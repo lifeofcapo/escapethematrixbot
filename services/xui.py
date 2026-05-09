@@ -122,7 +122,7 @@ async def close_session() -> None:
     for panel in _panels.values():
         await panel.close()
 
-async def create_client(email: str, days: int, devices_limit: int = 3,
+async def create_client(email: str, days: int, devices_limit: int = 4,
                         region: str = "fi") -> dict | None:
     inbounds = REGION_INBOUNDS.get(region)
     panel = _panels.get(region)
