@@ -322,6 +322,15 @@ TEXTS = {
         "en": "❌ Invalid input. Please try again.",
     },
     "btn_setup_guide":  {"ru": "📲 Как подключиться", "en": "📲 Setup guide"},
+
+    "sub_item": {
+        "ru": "🌍 {region}\n📅 {expires} ({days} дн.)\n📱 Устройств: {devices}\n🔗 <code>{link}</code>",
+        "en": "🌍 {region}\n📅 {expires} ({days} days)\n📱 Devices: {devices}\n🔗 <code>{link}</code>",
+    },
+    "devices_info": {
+        "ru": "📱 <b>Устройства</b>\n\nТекущий лимит: <b>{current}</b>\nМаксимум: <b>{maximum}</b>",
+        "en": "📱 <b>Devices</b>\n\nCurrent limit: <b>{current}</b>\nMaximum: <b>{maximum}</b>",
+    },
  
     "setup_choose_platform": {
         "ru": (

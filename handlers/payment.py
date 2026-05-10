@@ -80,6 +80,8 @@ async def _edit_or_answer(callback: CallbackQuery, text: str, reply_markup, phot
                 await callback.message.edit_caption(caption=text, reply_markup=reply_markup, parse_mode="HTML")
             except Exception:
                 await callback.message.answer(text, reply_markup=reply_markup, parse_mode="HTML")
+
+
 @router.callback_query(F.data == "menu:region")
 async def show_region_select(callback: CallbackQuery):
     """Первый шаг при нажатии 'Подписки' — выбор региона."""
@@ -247,7 +249,15 @@ async def confirm_buy(callback: CallbackQuery, bot: Bot):
         return
 
     await update_balance(callback.from_user.id, -price)
-    await _activate_plan_balance(bot, callback.from_user.id, plan_id, lang, region)
+    try:
+        await _activate_plan_balance(bot, callback.from_user.id, plan_id, lang, region)
+    except Exception as e:
+        logger.error(f"confirm_buy: _activate_plan_balance failed for user {callback.from_user.id}: {e}", exc_info=True)
+        await update_balance(callback.from_user.id, price)  
+        await bot.send_message(
+            callback.from_user.id,
+            t("error_generic", lang),
+        )
     await callback.answer()
 
 
@@ -480,7 +490,7 @@ async def topup_process_amount(message: Message, state: FSMContext, bot: Bot):
 async def _poll_topup_yookassa(bot: Bot, user_id: int, payment_id: str,
                                 amount: float, lang: str):
     from services.webhook_registry import get_or_create as _webhook_event, cleanup as _webhook_cleanup
- 
+
     webhook_event = _webhook_event(payment_id)
     try:
         await asyncio.wait_for(asyncio.shield(webhook_event.wait()), timeout=180)
@@ -488,25 +498,23 @@ async def _poll_topup_yookassa(bot: Bot, user_id: int, payment_id: str,
         _webhook_cleanup(payment_id)
         return
     except asyncio.TimeoutError:
-        pass  # вебхук не пришёл за 3 минуты — поллим сами
- 
+        pass  # вебхук не пришёл за 3 минуты - поллим сами
     # Вебхук не пришёл, поллим вручную (резервный путь)
     intervals = [30, 60, 60, 120] + [120] * 5
     for delay in intervals:
-        # Перед каждым sleep проверяем, что вебхук пришёл
         if webhook_event.is_set():
             logger.info(f"YooKassa poll: webhook fired during polling for {payment_id}, stopping")
             _webhook_cleanup(payment_id)
             return
- 
+
         await asyncio.sleep(delay)
- 
+
         try:
             status = await check_yookassa_payment(payment_id)
         except Exception as e:
             logger.warning(f"YooKassa poll error ({payment_id}): {e}, retrying...")
             continue
- 
+
         if status == "succeeded":
             payment = await get_payment_by_provider_id(payment_id)
             if payment and payment["status"] != "paid":
@@ -526,9 +534,8 @@ async def _poll_topup_yookassa(bot: Bot, user_id: int, payment_id: str,
         elif status in ("canceled", "failed"):
             _webhook_cleanup(payment_id)
             return
- 
-    _webhook_cleanup(payment_id)
 
+    _webhook_cleanup(payment_id)
 
 
 async def _poll_topup_crypto(bot: Bot, user_id: int, invoice_id: str,
@@ -546,7 +553,7 @@ async def _poll_topup_crypto(bot: Bot, user_id: int, invoice_id: str,
                 if user and user.get("referred_by"):
                     referrer_id = user["referred_by"]
                     bonus = amount * config.REFERRAL_BONUS_PERCENT / 100.0
-                    await update_balance(referrer_id, bonus)                
+                    await update_balance(referrer_id, bonus)
                 await bot.send_message(
                     user_id,
                     t("balance_topped", lang, amount=amount, balance=f"{balance:.2f}"),

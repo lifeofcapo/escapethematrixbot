@@ -1,8 +1,6 @@
-
 #handlers/profile.py
 
 import logging
-
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, FSInputFile, InputMediaPhoto, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
@@ -65,10 +63,14 @@ async def _build_profile_text(user: dict, lang: str) -> str:
             d_left = days_left(sub["expires_at"])
             sub_region_label = region_label(sub.get("region", "fi"), lang)
             sub_lines.append(
-                f"🌍 {sub_region_label}\n"
-                f"📅 {expires} ({d_left} дн.)\n"
-                f"📱 Устройств: {sub['devices_limit']}\n"
-                f"🔗 <code>{sub['sub_link']}</code>"
+                t(
+                    "sub_item", lang,
+                    region=sub_region_label,
+                    expires=expires,
+                    days=d_left,
+                    devices=sub["devices_limit"],
+                    link=sub["sub_link"],
+                )
             )
         sub_info = "\n\n".join(sub_lines)
     else:
@@ -106,18 +108,14 @@ async def show_devices(callback: CallbackQuery):
     if not sub:
         await callback.answer(t("no_sub_for_devices", lang), show_alert=True)
         return
-    text = (
-        f"📱 <b>{'Устройства' if lang == 'ru' else 'Devices'}</b>\n\n"
-        f"{'Текущий лимит' if lang == 'ru' else 'Current limit'}: "
-        f"<b>{sub['devices_limit']}</b>\n"
-        f"{'Максимум' if lang == 'ru' else 'Maximum'}: "
-        f"<b>{config.MAX_DEVICES + config.EXTRA_DEVICES}</b>"
+    text = t(
+        "devices_info", lang,
+        current=sub["devices_limit"],
+        maximum=config.MAX_DEVICES + config.EXTRA_DEVICES,
     )
-    from keyboards.kb import confirm_purchase_keyboard, back_keyboard
-    from locales.texts import t as _t
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=_t("extra_devices_btn", lang), callback_data="buy:extra_devices")],
-        [InlineKeyboardButton(text=_t("btn_back", lang), callback_data="menu:profile")],
+        [InlineKeyboardButton(text=t("extra_devices_btn", lang), callback_data="buy:extra_devices")],
+        [InlineKeyboardButton(text=t("btn_back", lang), callback_data="menu:profile")],
     ])
     try:
         await callback.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
@@ -166,7 +164,6 @@ async def setup_choose_platform(callback: CallbackQuery):
         await callback.message.delete()
     except Exception:
         pass
-
 
     if has_photo:
         photo = _GUIDE_PHOTO_FILE_ID if _GUIDE_PHOTO_FILE_ID else FSInputFile(guide_path)

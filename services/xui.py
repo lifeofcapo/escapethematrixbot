@@ -4,7 +4,7 @@ import uuid
 import asyncio
 import aiohttp
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from config import config
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,6 @@ _panels: dict[str, _PanelSession] = {
     "nl": _PanelSession(_nl_base, config.PANEL_NL_USER, config.PANEL_NL_PASS, "NL"),
 }
 
-# Маппинг регион → (desktop_inbound_id, mobile_inbound_id)
 REGION_INBOUNDS: dict[str, tuple[int, int]] = {
     "fi": (config.INBOUND_ID, config.INBOUND_MOBILE_ID),
     "nl": (config.INBOUND_NL_ID, config.INBOUND_NL_MOBILE_ID),
@@ -132,7 +131,7 @@ async def create_client(email: str, days: int, devices_limit: int = 4,
 
     desktop_inbound, mobile_inbound = inbounds
     client_id = str(uuid.uuid4())
-    expire_ts = int((datetime.utcnow() + timedelta(days=days)).timestamp() * 1000)
+    expire_ts = int((datetime.now(timezone.utc) + timedelta(days=days)).timestamp() * 1000)
     label = REGION_LABELS.get(region, region)
 
     def _client_payload(inbound_id: int, email_val: str) -> dict:
@@ -282,7 +281,5 @@ async def get_online_count(email: str, region: str = "fi") -> int | None:
 
 
 # Обратная совместимость (старые вызовы без session)
-# login / _post_with_reauth / SESSION_COOKIE и т.д. больше не нужны,
-# но если где-то импортируется напрямую , оставлю загрушку:
 async def login():
     return await _panels["fi"].login()

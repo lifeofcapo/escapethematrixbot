@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from aiogram import Router, F, Bot
+from aiogram.exceptions import TelegramRetryAfter, TelegramForbiddenError, TelegramBadRequest
 from aiogram.filters import Command, Filter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -14,6 +15,7 @@ from locales.texts import t
 
 logger = logging.getLogger(__name__)
 router = Router()
+_BROADCAST_DELAY = 0.04
 
 
 class BroadcastStates(StatesGroup):
@@ -22,8 +24,8 @@ class BroadcastStates(StatesGroup):
 
 class IsAdmin(Filter):
     async def __call__(self, event: Message | CallbackQuery) -> bool:
-        user_id = event.from_user.id if isinstance(event, Message) else event.from_user.id
-        return user_id in config.ADMIN_IDS
+        return event.from_user.id in config.ADMIN_IDS
+
 
 @router.message(IsAdmin(), Command("broadcast"))
 async def cmd_broadcast(message: Message, state: FSMContext):
@@ -69,8 +71,6 @@ async def broadcast_text_received(message: Message, state: FSMContext):
         type="text",
         text=text,
     )
-
-    # Предпросмотр
     await message.answer(text, parse_mode="HTML")
     await message.answer(
         t("broadcast_preview", "ru"),
@@ -87,6 +87,7 @@ async def broadcast_send(callback: CallbackQuery, bot: Bot, state: FSMContext):
     await callback.message.edit_reply_markup(reply_markup=None)
     await callback.message.answer(t("broadcast_started", "ru"))
     await callback.answer()
+
     async with get_pool().acquire() as conn:
         rows = await conn.fetch("SELECT id FROM users")
     user_ids = [row["id"] for row in rows]
@@ -111,10 +112,37 @@ async def broadcast_send(callback: CallbackQuery, bot: Bot, state: FSMContext):
                     parse_mode="HTML",
                 )
             sent += 1
+            await asyncio.sleep(_BROADCAST_DELAY)
+
+        except TelegramRetryAfter as e:
+            logger.warning(f"Broadcast: flood control, sleeping {e.retry_after}s")
+            await asyncio.sleep(e.retry_after + 1)
+            try:
+                if is_photo:
+                    await bot.send_photo(
+                        chat_id=uid,
+                        photo=data["photo_id"],
+                        caption=data.get("caption", ""),
+                        parse_mode="HTML",
+                    )
+                else:
+                    await bot.send_message(
+                        chat_id=uid,
+                        text=data["text"],
+                        parse_mode="HTML",
+                    )
+                sent += 1
+            except Exception as retry_e:
+                logger.warning(f"Broadcast retry failed for {uid}: {retry_e}")
+                failed += 1
+
+        except (TelegramForbiddenError, TelegramBadRequest):
+            # если пользователь заблокировал бота
+            failed += 1
+
         except Exception as e:
             logger.warning(f"Broadcast failed for {uid}: {e}")
             failed += 1
-        await asyncio.sleep(0.05)  # лимит Telegram
 
     await bot.send_message(
         callback.from_user.id,
