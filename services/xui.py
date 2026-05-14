@@ -189,6 +189,9 @@ async def update_client_expiry(client_id: str, email: str,
             "expiryTime": new_expire,
             "enable": True,
             "flow": "xtls-rprx-vision",
+            "sudId": email,
+            "totalGB": 0,
+            "tgId": "",
         }]}),
     }
     data = await panel.post(url, payload_desktop)
@@ -202,6 +205,9 @@ async def update_client_expiry(client_id: str, email: str,
             "expiryTime": new_expire,
             "enable": True,
             "flow": "xtls-rprx-vision",
+            "sudId": email,
+            "totalGB": 0,
+            "tgId": "",
         }]}),
     }
     data = await panel.post(url, payload_mobile)
