@@ -189,7 +189,7 @@ async def update_client_expiry(client_id: str, email: str,
             "expiryTime": new_expire,
             "enable": True,
             "flow": "xtls-rprx-vision",
-            "sudId": email,
+            "subId": email,
             "totalGB": 0,
             "tgId": "",
         }]}),
@@ -205,7 +205,7 @@ async def update_client_expiry(client_id: str, email: str,
             "expiryTime": new_expire,
             "enable": True,
             "flow": "xtls-rprx-vision",
-            "sudId": email,
+            "subId": email,
             "totalGB": 0,
             "tgId": "",
         }]}),
@@ -236,13 +236,15 @@ async def update_client_ip_limit(client_id: str, email: str, limit: int,
                 "limitIp": limit,
                 "enable": True,
                 "flow": "xtls-rprx-vision",
+                "subId": email,
+                "totalGB": 0,
+                "tgId": "",
             }]}),
         }
         data = await panel.post(url, payload)
         results.append(bool(data and data.get("success")))
 
     return any(results)
-
 
 async def get_client_traffic(email: str, region: str = "fi") -> dict | None:
     panel = _panels.get(region, _panels["fi"])
