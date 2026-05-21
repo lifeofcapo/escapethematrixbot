@@ -205,6 +205,7 @@ async def handle_web_subscription(request: web.Request) -> web.Response:
             extra_days=days,
             current_expire_ms=current_expire_ms,
             region=region,
+            devices_limit=sub.get("devices_limit", 4),
         )
 
         if not ok:

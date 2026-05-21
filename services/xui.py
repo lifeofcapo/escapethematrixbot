@@ -172,7 +172,8 @@ async def create_client(email: str, days: int, devices_limit: int = 4,
 
 async def update_client_expiry(client_id: str, email: str,
                                 extra_days: int, current_expire_ms: int,
-                                region: str = "fi") -> bool:
+                                region: str = "fi",
+                                devices_limit: int = 4) -> bool:
     new_expire = current_expire_ms + extra_days * 86_400_000
     inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_ID, config.INBOUND_MOBILE_ID))
     panel = _panels.get(region, _panels["fi"])
@@ -192,6 +193,7 @@ async def update_client_expiry(client_id: str, email: str,
             "subId": email,
             "totalGB": 0,
             "tgId": "",
+            "limitIp": devices_limit,
         }]}),
     }
     data = await panel.post(url, payload_desktop)
@@ -208,6 +210,7 @@ async def update_client_expiry(client_id: str, email: str,
             "subId": email,
             "totalGB": 0,
             "tgId": "",
+            "limitIp": devices_limit,
         }]}),
     }
     data = await panel.post(url, payload_mobile)
