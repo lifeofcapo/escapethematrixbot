@@ -220,7 +220,7 @@ async def extend_subscription(sub_id: int, extra_days: int) -> None:
     async with get_pool().acquire() as conn:
         await conn.execute("""
             UPDATE subscriptions
-            SET expires_at = expires_at + ($1 || ' days')::INTERVAL
+            SET expires_at = GREATEST(expires_at, NOW()) + ($1 || ' days')::INTERVAL
             WHERE id = $2
         """, str(extra_days), sub_id)
 
@@ -266,3 +266,9 @@ async def mark_payment_paid(provider_id: str) -> None:
             SET status = 'paid', paid_at = NOW()
             WHERE provider_id = $1
         """, provider_id)
+
+async def clear_expiry_notifications(sub_id: int) -> None:
+    async with get_pool().acquire() as conn:
+        await conn.execute(
+            "DELETE FROM expiry_notifications WHERE sub_id = $1", sub_id
+        )

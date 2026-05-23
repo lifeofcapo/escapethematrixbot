@@ -46,4 +46,4 @@ async def show_referral(callback: CallbackQuery, bot: Bot):
             disable_web_page_preview=True,
         )
 
-    await callback.answer()  # FIX: был пропущен, спиннер крутился вечно
+    await callback.answer() 

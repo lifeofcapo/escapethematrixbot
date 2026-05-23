@@ -10,7 +10,7 @@ from config import config
 from database.db import (
     get_user, get_active_subscription, create_payment, get_payment_by_provider_id,
     mark_payment_paid, create_subscription, extend_subscription,
-    update_balance, update_devices_limit, get_balance,
+    update_balance, update_devices_limit, get_balance, clear_expiry_notifications,
 )
 from keyboards.kb import (
     plans_keyboard, pay_now_keyboard, back_keyboard,
@@ -280,21 +280,22 @@ async def _activate_plan_balance(bot, user_id: int, plan_id: str, lang: str, reg
         return
 
     days = plan["days"]
-    existing_sub = await get_active_subscription(user_id)
+    
+    from database.db import get_active_subscriptions
+    all_subs = await get_active_subscriptions(user_id)
+    existing_sub = next((s for s in all_subs if s.get("region") == region), None)
 
-    # Если у пользователя уже есть подписка того же региона — продлеваем
-    if existing_sub and existing_sub.get("region") == region:
-        # Сохраняем старую дату в миллисекундах ДО продления в БД
+    if existing_sub:
         old_expire = existing_sub["expires_at"]
         if hasattr(old_expire, "timestamp"):
             old_expire_ms = int(old_expire.timestamp() * 1000)
         else:
-            # на случай, если expires_at – строка
             from datetime import datetime, timezone
             dt = datetime.fromisoformat(str(old_expire))
             old_expire_ms = int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
         await extend_subscription(existing_sub["id"], days)
+        await clear_expiry_notifications(existing_sub["id"])
         await update_client_expiry(
             existing_sub["xui_client_id"],
             existing_sub["xui_email"],

@@ -187,17 +187,20 @@ async def handle_web_subscription(request: web.Request) -> web.Response:
     from services import xui 
 
     if sub and sub.get("xui_client_id") and sub.get("xui_email"):
-        from datetime import timezone
+        from datetime import datetime, timezone as tz, timedelta
+
         client_id = sub["xui_client_id"]
         email = sub["xui_email"]
-        region = sub.get("region", "fi")  # <-- всегда из БД, игнор requested_region
+        region = sub.get("region", "fi")
 
         expires_at = sub["expires_at"]
-        if hasattr(expires_at, "timestamp"):
-            current_expire_ms = int(expires_at.timestamp() * 1000)
-        else:
-            from datetime import datetime
-            current_expire_ms = int(datetime.fromisoformat(str(expires_at)).timestamp() * 1000)
+        base = expires_at if hasattr(expires_at, "timestamp") else datetime.fromisoformat(str(expires_at))
+        if base.tzinfo is None:
+            base = base.replace(tzinfo=tz.utc)
+
+        now_utc = datetime.now(tz.utc)
+        effective_base = max(base, now_utc)
+        current_expire_ms = int(effective_base.timestamp() * 1000)
 
         ok = await xui.update_client_expiry(
             client_id=client_id,
@@ -207,18 +210,12 @@ async def handle_web_subscription(request: web.Request) -> web.Response:
             region=region,
             devices_limit=sub.get("devices_limit", 4),
         )
-
         if not ok:
             logger.error(f"web-subscription: xui renew failed for user {user_id}")
             return web.json_response({"error": "xui_error"}, status=502)
 
-        from datetime import datetime, timezone as tz, timedelta
-        base = expires_at if hasattr(expires_at, "timestamp") else datetime.fromisoformat(str(expires_at))
-        if base.tzinfo is None:
-            base = base.replace(tzinfo=tz.utc)
-        new_expiry = base + timedelta(days=days)
+        new_expiry = effective_base + timedelta(days=days)
 
-        from database.db import get_pool  # используй свою функцию получения пула
         db = get_pool()
         async with db.acquire() as conn:
             await conn.execute(
