@@ -115,9 +115,22 @@ async def show_plans(callback: CallbackQuery):
 
 @router.callback_query(F.data == "menu:plans")
 async def show_plans_direct(callback: CallbackQuery):
-    """Показываем тарифы сразу, регион = 'fi' по умолчанию."""
-    callback.data = "region:fi"
-    await show_plans(callback)
+    user = await get_user(callback.from_user.id)
+    lang = user.get("language", "ru") if user else "ru"
+    balance = await get_balance(callback.from_user.id)
+
+    region_info = REGIONS["fi"]
+    flag = region_info["flag"]
+    region_name = region_info[f"name_{lang}"]
+
+    text = t("plans_header", lang, balance=f"{balance:.2f}", region=f"{flag} {region_name}")
+    await _edit_or_answer(
+        callback,
+        text,
+        plans_keyboard(lang, "fi"),
+        photo=FSInputFile(PHOTOS["plans"]),
+    )
+    await callback.answer()
 
 @router.callback_query(F.data.startswith("buy:") & ~F.data.startswith("buy:extra_devices"))
 async def buy_plan(callback: CallbackQuery):
