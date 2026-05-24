@@ -23,23 +23,14 @@ class Config:
     PANEL_BASE_URL: str = f"{PANEL_HOST}:{PANEL_PORT}"
     SUB_HOST: str = "https://vpn.escapethematrix.to"
     SUB_PORT: int = 2096
-    INBOUND_ID: int = int(os.getenv("INBOUND_ID", "1")) 
-    INBOUND_MOBILE_ID: int = int(os.getenv("INBOUND_MOBILE_ID", "2"))
-
-
-    INBOUND_NL_ID: int = int(os.getenv("INBOUND_NL_ID", "3"))
-    INBOUND_NL_MOBILE_ID: int = int(os.getenv("INBOUND_NL_MOBILE_ID", "4"))
-    PANEL_NL_HOST: str = os.getenv("PANEL_NL_HOST", "https://nl.escapethematrix.to")
-    PANEL_NL_PORT: int = int(os.getenv("PANEL_NL_PORT", ""))
-    PANEL_NL_USER: str = os.getenv("PANEL_NL_USER", "")
-    PANEL_NL_PASS: str = os.getenv("PANEL_NL_PASS", "")
-    PANEL_NL_BASE_PATH: str = os.getenv("PANEL_NL_BASE_PATH", "")
-    SUB_NL_HOST: str = os.getenv("SUB_NL_HOST", "https://nl.escapethematrix.to")
-    SUB_NL_PORT: int = int(os.getenv("SUB_NL_PORT", "2096"))
+    INBOUND_FI_DESKTOP: int = int(os.getenv("INBOUND_FI_DESKTOP", "1"))
+    INBOUND_FI_MOBILE:  int = int(os.getenv("INBOUND_FI_MOBILE",  "2"))
+    INBOUND_NL_DESKTOP: int = int(os.getenv("INBOUND_NL_DESKTOP", "3"))
+    INBOUND_NL_MOBILE:  int = int(os.getenv("INBOUND_NL_MOBILE",  "4"))
 
     MAX_DEVICES: int = 4
-    EXTRA_DEVICES: int = 3       # доп. устройства за доплату
-    EXTRA_DEVICES_PRICE: int = 50  # рублей
+    EXTRA_DEVICES: int = 3      
+    EXTRA_DEVICES_PRICE: int = 50  
 
     REFERRAL_BONUS_PERCENT: float = 25.0
 

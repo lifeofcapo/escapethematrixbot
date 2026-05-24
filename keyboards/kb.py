@@ -39,7 +39,7 @@ def main_menu(lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text=t("btn_profile", lang),   callback_data="menu:profile"),
-            InlineKeyboardButton(text=t("btn_subscribe", lang), callback_data="menu:region"),
+            InlineKeyboardButton(text=t("btn_subscribe", lang), callback_data="menu:plans"),
         ],
         [
             InlineKeyboardButton(text=t("btn_topup", lang),     callback_data="menu:topup"),
@@ -133,7 +133,7 @@ def plans_keyboard(lang: str, region: str = "fi") -> InlineKeyboardMarkup:
         text=t("extra_devices_btn", lang),
         callback_data="buy:extra_devices",
     )])
-    rows.append([InlineKeyboardButton(text=t("btn_back", lang), callback_data="menu:region")])
+    rows.append([InlineKeyboardButton(text=t("btn_back", lang), callback_data="menu:back")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 

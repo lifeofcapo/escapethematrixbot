@@ -93,16 +93,14 @@ class _PanelSession:
         return None
 
 _fi_base = _build_base(config.PANEL_HOST, config.PANEL_PORT, config.PANEL_BASE_PATH)
-_nl_base = _build_base(config.PANEL_NL_HOST, config.PANEL_NL_PORT, config.PANEL_NL_BASE_PATH)
 
 _panels: dict[str, _PanelSession] = {
     "fi": _PanelSession(_fi_base, config.PANEL_USER, config.PANEL_PASS, "FI"),
-    "nl": _PanelSession(_nl_base, config.PANEL_NL_USER, config.PANEL_NL_PASS, "NL"),
 }
 
 REGION_INBOUNDS: dict[str, tuple[int, int]] = {
-    "fi": (config.INBOUND_ID, config.INBOUND_MOBILE_ID),
-    "nl": (config.INBOUND_NL_ID, config.INBOUND_NL_MOBILE_ID),
+    "fi": (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE),
+    "nl": (config.INBOUND_NL_DESKTOP, config.INBOUND_NL_MOBILE),
 }
 
 REGION_LABELS = {
@@ -110,9 +108,7 @@ REGION_LABELS = {
     "nl": "🇳🇱 Netherlands",
 }
 
-def _sub_link(email: str, region: str) -> str:
-    if region == "nl":
-        return f"{config.SUB_NL_HOST}:{config.SUB_NL_PORT}/sub/{email}"
+def _sub_link(email: str, region: str = "fi") -> str:
     return f"{config.SUB_HOST}:{config.SUB_PORT}/sub/{email}"
 
 
@@ -124,7 +120,7 @@ async def close_session() -> None:
 async def create_client(email: str, days: int, devices_limit: int = 4,
                         region: str = "fi") -> dict | None:
     inbounds = REGION_INBOUNDS.get(region)
-    panel = _panels.get(region)
+    panel = _panels.get(region, _panels["fi"])
     if not inbounds or not panel:
         logger.error(f"Unknown region: {region}")
         return None
@@ -175,7 +171,7 @@ async def update_client_expiry(client_id: str, email: str,
                                 region: str = "fi",
                                 devices_limit: int = 4) -> bool:
     new_expire = current_expire_ms + extra_days * 86_400_000
-    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_ID, config.INBOUND_MOBILE_ID))
+    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE))
     panel = _panels.get(region, _panels["fi"])
     url = f"/panel/api/inbounds/updateClient/{client_id}"
     results = []
@@ -221,7 +217,7 @@ async def update_client_expiry(client_id: str, email: str,
 
 async def update_client_ip_limit(client_id: str, email: str, limit: int,
                                   region: str = "fi") -> bool:
-    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_ID, config.INBOUND_MOBILE_ID))
+    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE))
     panel = _panels.get(region, _panels["fi"])
     url = f"/panel/api/inbounds/updateClient/{client_id}"
     desktop_inbound, mobile_inbound = inbounds

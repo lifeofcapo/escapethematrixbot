@@ -82,21 +82,6 @@ async def _edit_or_answer(callback: CallbackQuery, text: str, reply_markup, phot
                 await callback.message.answer(text, reply_markup=reply_markup, parse_mode="HTML")
 
 
-@router.callback_query(F.data == "menu:region")
-async def show_region_select(callback: CallbackQuery):
-    """Первый шаг при нажатии 'Подписки' — выбор региона."""
-    user = await get_user(callback.from_user.id)
-    lang = user.get("language", "ru") if user else "ru"
-
-    text = (
-        "🌍 <b>Выберите регион сервера:</b>"
-        if lang == "ru"
-        else "🌍 <b>Choose server region:</b>"
-    )
-    await _edit_or_answer(callback, text, region_keyboard(lang))
-    await callback.answer()
-
-
 @router.callback_query(F.data.startswith("region:soon:"))
 async def region_coming_soon(callback: CallbackQuery):
     user = await get_user(callback.from_user.id)
@@ -129,8 +114,8 @@ async def show_plans(callback: CallbackQuery):
     await callback.answer()
 
 @router.callback_query(F.data == "menu:plans")
-async def show_plans_legacy(callback: CallbackQuery):
-    """Обратная совместимость — команда /plans и прямые ссылки."""
+async def show_plans_direct(callback: CallbackQuery):
+    """Показываем тарифы сразу, регион = 'fi' по умолчанию."""
     callback.data = "region:fi"
     await show_plans(callback)
 
