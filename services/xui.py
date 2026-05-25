@@ -4,9 +4,11 @@ import uuid
 import asyncio
 import re
 import aiohttp
+import socket
 import logging
 from datetime import datetime, timedelta, timezone
 from config import config
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,17 @@ class _PanelSession:
         self._csrf_token: str | None = None  # DEBUG: сохраняем CSRF токен
 
     def _new_session(self) -> aiohttp.ClientSession:
-        return aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
+        timeout = aiohttp.ClientTimeout(total=30, connect=10)   # Увеличенный таймаут
+        connector = aiohttp.TCPConnector(
+            family=socket.AF_INET,          # ТОЛЬКО IPv4 (избегаем IPv6-зависаний)
+            ssl=False,                      # Отключаем проверку SSL
+            force_close=True                # Принудительно закрываем соединения после запроса
+        )
+        return aiohttp.ClientSession(
+            connector=connector,
+            timeout=timeout,
+            trust_env=False                 # Игнорируем HTTP_PROXY/HTTPS_PROXY из окружения
+        )
 
     async def get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
