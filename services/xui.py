@@ -43,9 +43,18 @@ class _PanelSession:
         async with self._lock:
             s = await self.get_session()
             try:
+                csrf_resp = await s.get(f"{self.base}/csrf-token")
+                csrf_data = await csrf_resp.json()
+                csrf_token = csrf_data.get("obj", "")
+                logger.debug(f"[{self.label}] csrf token obtained")
+
                 resp = await s.post(
                     f"{self.base}/login",
                     json={"username": self.user, "password": self.password},
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-Csrf-Token": csrf_token,
+                    },
                 )
                 logger.debug(f"[{self.label}] xui login status: {resp.status}")
                 if resp.status == 200:
