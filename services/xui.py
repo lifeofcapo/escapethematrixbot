@@ -39,27 +39,18 @@ class _PanelSession:
             await self._session.close()
             self._session = None
 
-    async def _get_csrf_token(self, s: aiohttp.ClientSession) -> str:
-        """Получить CSRF токен из мета-тега HTML страницы логина (3x-ui v3+)."""
-        try:
-            resp = await s.get(f"{self.base}/")
-            html = await resp.text()
-            # <meta name="csrf-token" content="...">
-            import re
-            m = re.search(r'name="csrf-token"\s+content="([^"]+)"', html)
-            if m:
-                logger.debug(f"[{self.label}] csrf token obtained from HTML")
-                return m.group(1)
-        except Exception as e:
-            logger.error(f"[{self.label}] csrf token fetch error: {e}")
-        return ""
-
     async def login(self) -> str | None:
         async with self._lock:
             s = await self.get_session()
             try:
-                # 3x-ui v3+: CSRF токен берётся из HTML страницы логина
-                csrf_token = await self._get_csrf_token(s)
+                # 3x-ui v3+: CSRF токен берётся из мета-тега HTML страницы логина
+                import re
+                page = await s.get(f"{self.base}/")
+                html = await page.text()
+                m = re.search(r'name="csrf-token"\s+content="([^"]+)"', html)
+                csrf_token = m.group(1) if m else ""
+                logger.debug(f"[{self.label}] csrf token obtained")
+
                 resp = await s.post(
                     f"{self.base}/login",
                     json={"username": self.user, "password": self.password},
