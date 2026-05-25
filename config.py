@@ -58,4 +58,6 @@ class Config:
     WEBHOOK_PATH: str = "/webhook/bot"
     WEBHOOK_PORT: int = int(os.getenv("WEBHOOK_PORT", "8443"))
 
+    PANEL_API_TOKEN: str = os.getenv("PANEL_API_TOKEN", "")
+
 config = Config()
