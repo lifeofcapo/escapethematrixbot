@@ -2,6 +2,7 @@
 import json
 import uuid
 import asyncio
+import re
 import aiohttp
 import logging
 from datetime import datetime, timedelta, timezone
@@ -9,19 +10,20 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
+
 def _build_base(host: str, port: int, base_path: str) -> str:
     path = f"/{base_path}" if base_path else ""
     return f"{host}:{port}{path}"
 
 
 class _PanelSession:
-    """Одиночная сессия к одной 3x-ui панели."""
+    """Сессия к одной 3x-ui панели с CSRF-аутентификацией."""
 
     def __init__(self, base: str, user: str, password: str, label: str):
         self.base = base
         self.user = user
         self.password = password
-        self.label = label          # для логов: "FI" / "NL"
+        self.label = label
         self._session: aiohttp.ClientSession | None = None
         self._lock = asyncio.Lock()
         self._cookie: str | None = None
@@ -44,7 +46,6 @@ class _PanelSession:
             s = await self.get_session()
             try:
                 # 3x-ui v3+: CSRF токен берётся из мета-тега HTML страницы логина
-                import re
                 page = await s.get(f"{self.base}/")
                 html = await page.text()
                 m = re.search(r'name="csrf-token"\s+content="([^"]+)"', html)
@@ -100,17 +101,17 @@ class _PanelSession:
                 return None
         return None
 
-_fi_base = _build_base(config.PANEL_HOST, config.PANEL_PORT, config.PANEL_BASE_PATH)
-_nl_base = _build_base(config.PANEL_NL_HOST, config.PANEL_NL_PORT, config.PANEL_NL_BASE_PATH)
+_base = _build_base(config.PANEL_HOST, config.PANEL_PORT, config.PANEL_BASE_PATH)
+_panel = _PanelSession(_base, config.PANEL_USER, config.PANEL_PASS, "MASTER")
 
 _panels: dict[str, _PanelSession] = {
-    "fi": _PanelSession(_fi_base, config.PANEL_USER, config.PANEL_PASS, "FI"),
-    "nl": _PanelSession(_nl_base, config.PANEL_NL_USER, config.PANEL_NL_PASS, "NL"),
+    "fi": _panel,
+    "nl": _panel,
 }
 
 REGION_INBOUNDS: dict[str, tuple[int, int]] = {
-    "fi": (config.INBOUND_ID, config.INBOUND_MOBILE_ID),
-    "nl": (config.INBOUND_NL_ID, config.INBOUND_NL_MOBILE_ID),
+    "fi": (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE),
+    "nl": (config.INBOUND_NL_DESKTOP, config.INBOUND_NL_MOBILE),
 }
 
 REGION_LABELS = {
@@ -118,16 +119,16 @@ REGION_LABELS = {
     "nl": "🇳🇱 Netherlands",
 }
 
-def _sub_link(email: str, region: str) -> str:
-    if region == "nl":
-        return f"{config.SUB_NL_HOST}:{config.SUB_NL_PORT}/sub/{email}"
+
+def _sub_link(email: str) -> str:
+    """Ссылка на подписку — одна для всех регионов (единая панель)."""
     return f"{config.SUB_HOST}:{config.SUB_PORT}/sub/{email}"
 
 
 async def close_session() -> None:
-    """Закрыть все сессии (вызывается при shutdown бота)."""
-    for panel in _panels.values():
-        await panel.close()
+    """Закрыть сессию (вызывается при shutdown бота)."""
+    await _panel.close()
+
 
 async def create_client(email: str, days: int, devices_limit: int = 4,
                         region: str = "fi") -> dict | None:
@@ -174,7 +175,7 @@ async def create_client(email: str, days: int, devices_limit: int = 4,
     if not data2 or not data2.get("success"):
         logger.warning(f"[{region.upper()}] xui addClient mobile failed: {data2} (desktop OK)")
 
-    sub_link = _sub_link(email, region)
+    sub_link = _sub_link(email)
     return {"client_id": client_id, "email": email, "sub_link": sub_link}
 
 
@@ -183,8 +184,8 @@ async def update_client_expiry(client_id: str, email: str,
                                 region: str = "fi",
                                 devices_limit: int = 4) -> bool:
     new_expire = current_expire_ms + extra_days * 86_400_000
-    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_ID, config.INBOUND_MOBILE_ID))
-    panel = _panels.get(region, _panels["fi"])
+    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE))
+    panel = _panels.get(region, _panel)
     url = f"/panel/api/inbounds/updateClient/{client_id}"
     results = []
 
@@ -194,7 +195,7 @@ async def update_client_expiry(client_id: str, email: str,
         "id": desktop_inbound,
         "settings": json.dumps({"clients": [{
             "id": client_id,
-            "email": email,          
+            "email": email,
             "expiryTime": new_expire,
             "enable": True,
             "flow": "xtls-rprx-vision",
@@ -211,7 +212,7 @@ async def update_client_expiry(client_id: str, email: str,
         "id": mobile_inbound,
         "settings": json.dumps({"clients": [{
             "id": client_id,
-            "email": f"{email}m",     
+            "email": f"{email}m",
             "expiryTime": new_expire,
             "enable": True,
             "flow": "xtls-rprx-vision",
@@ -229,8 +230,8 @@ async def update_client_expiry(client_id: str, email: str,
 
 async def update_client_ip_limit(client_id: str, email: str, limit: int,
                                   region: str = "fi") -> bool:
-    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_ID, config.INBOUND_MOBILE_ID))
-    panel = _panels.get(region, _panels["fi"])
+    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE))
+    panel = _panels.get(region, _panel)
     url = f"/panel/api/inbounds/updateClient/{client_id}"
     desktop_inbound, mobile_inbound = inbounds
     results = []
@@ -257,8 +258,9 @@ async def update_client_ip_limit(client_id: str, email: str, limit: int,
 
     return any(results)
 
+
 async def get_client_traffic(email: str, region: str = "fi") -> dict | None:
-    panel = _panels.get(region, _panels["fi"])
+    panel = _panels.get(region, _panel)
     s = await panel.get_session()
     headers = await panel._headers()
     try:
@@ -275,7 +277,7 @@ async def get_client_traffic(email: str, region: str = "fi") -> dict | None:
 
 
 async def get_online_count(email: str, region: str = "fi") -> int | None:
-    panel = _panels.get(region, _panels["fi"])
+    panel = _panels.get(region, _panel)
     s = await panel.get_session()
     headers = await panel._headers()
     try:
@@ -299,6 +301,5 @@ async def get_online_count(email: str, region: str = "fi") -> int | None:
     return None
 
 
-# Обратная совместимость (старые вызовы без session)
 async def login():
-    return await _panels["fi"].login()
+    return await _panel.login()
