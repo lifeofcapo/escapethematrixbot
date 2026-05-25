@@ -39,41 +39,24 @@ class _PanelSession:
             await self._session.close()
             self._session = None
 
-    async def _get_csrf_token(self, s: aiohttp.ClientSession) -> str:
-        """Получить CSRF токен из мета-тега HTML страницы логина (3x-ui v3+)."""
-        try:
-            resp = await s.get(f"{self.base}/")
-            html = await resp.text()
-            # <meta name="csrf-token" content="...">
-            import re
-            m = re.search(r'name="csrf-token"\s+content="([^"]+)"', html)
-            if m:
-                logger.debug(f"[{self.label}] csrf token obtained from HTML")
-                return m.group(1)
-        except Exception as e:
-            logger.error(f"[{self.label}] csrf token fetch error: {e}")
-        return ""
-
     async def login(self) -> str | None:
         async with self._lock:
             s = await self.get_session()
             try:
-                # 3x-ui v3+: CSRF токен берётся из HTML страницы логина
-                csrf_token = await self._get_csrf_token(s)
                 resp = await s.post(
                     f"{self.base}/login",
                     json={"username": self.user, "password": self.password},
-                    headers={
-                        "Content-Type": "application/json",
-                        "X-Csrf-Token": csrf_token,
-                    },
                 )
                 logger.debug(f"[{self.label}] xui login status: {resp.status}")
                 if resp.status == 200:
                     data = await resp.json()
                     if data.get("success"):
-                        all_cookies = [f"{c.key}={c.value}" for c in s.cookie_jar]
-                        self._cookie = "; ".join(all_cookies)
+                        set_cookie = resp.headers.get("Set-Cookie", "")
+                        if set_cookie:
+                            self._cookie = set_cookie.split(";")[0].strip()
+                        else:
+                            all_cookies = [f"{c.key}={c.value}" for c in s.cookie_jar]
+                            self._cookie = "; ".join(all_cookies)
                         logger.debug(f"[{self.label}] xui login OK")
                         return self._cookie
             except Exception as e:
