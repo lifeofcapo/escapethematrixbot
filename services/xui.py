@@ -240,7 +240,7 @@ async def create_client(email: str, days: int, devices_limit: int = 4,
         logger.info(f"Payload for inbound {inbound_id}, email {email_val}: {json.dumps(payload)[:500]}")  # DEBUG
         return payload
 
-    url = "/panel/api/inbounds/addClient"
+    url = "/api/inbounds/addClient"
     logger.info(f"Using API URL: {url}")  # DEBUG
 
     # Desktop
@@ -274,7 +274,7 @@ async def update_client_expiry(client_id: str, email: str,
     new_expire = current_expire_ms + extra_days * 86_400_000
     inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE))
     panel = _panels.get(region, _panel)
-    url = f"/panel/api/inbounds/updateClient/{client_id}"
+    url = f"/api/inbounds/updateClient/{client_id}"
     results = []
 
     desktop_inbound, mobile_inbound = inbounds
@@ -326,7 +326,7 @@ async def update_client_ip_limit(client_id: str, email: str, limit: int,
     
     inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE))
     panel = _panels.get(region, _panel)
-    url = f"/panel/api/inbounds/updateClient/{client_id}"
+    url = f"/api/inbounds/updateClient/{client_id}"
     desktop_inbound, mobile_inbound = inbounds
     results = []
 
@@ -361,7 +361,7 @@ async def get_client_traffic(email: str, region: str = "fi") -> dict | None:
     s = await panel.get_session()
     headers = await panel._headers()
     
-    url = f"{panel.base}/panel/api/inbounds/getClientTraffics/{email}"
+    url = f"{panel.base}/api/inbounds/getClientTraffics/{email}"
     logger.info(f"GET traffic URL: {url}")  # DEBUG
     
     try:
@@ -386,7 +386,7 @@ async def get_online_count(email: str, region: str = "fi") -> int | None:
     s = await panel.get_session()
     headers = await panel._headers()
     
-    url = f"{panel.base}/panel/api/inbounds/clientIps/{email}"
+    url = f"{panel.base}/api/inbounds/clientIps/{email}"
     logger.info(f"Online count URL: {url}")  # DEBUG
     
     try:
