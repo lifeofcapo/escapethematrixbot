@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 def _build_base(host: str, port: int, base_path: str) -> str:
-    """Собирает полный базовый URL панели с учётом base_path."""
     path = f"/{base_path}" if base_path else ""
     return f"{host}:{port}{path}"
 
@@ -27,8 +26,8 @@ class _PanelSession:
         self.label = label
         self._session: aiohttp.ClientSession | None = None
         self._lock = asyncio.Lock()
-        self._csrf_token: str | None = None
         self._cookie: str | None = None
+        self._csrf_token: str | None = None  # DEBUG: сохраняем CSRF токен
 
     def _new_session(self) -> aiohttp.ClientSession:
         return aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
@@ -43,137 +42,124 @@ class _PanelSession:
             await self._session.close()
             self._session = None
 
-    async def _extract_csrf_from_page(self) -> str:
-        """Извлекает CSRF токен из HTML страницы логина."""
-        s = await self.get_session()
-        page = await s.get(f"{self.base}/")
-        html = await page.text()
-        m = re.search(r'name="csrf-token"\s+content="([^"]+)"', html)
-        token = m.group(1) if m else ""
-        logger.debug(f"[{self.label}] CSRF from page: {token[:20]}...")
-        return token
-
     async def login(self) -> str | None:
-        """Логин с сохранением CSRF токена и кук."""
         async with self._lock:
             s = await self.get_session()
             try:
-                # Получаем свежий CSRF токен
-                self._csrf_token = await self._extract_csrf_from_page()
-                if not self._csrf_token:
-                    logger.error(f"[{self.label}] No CSRF token found on login page")
-                    return None
+                # 3x-ui v3+: CSRF токен берётся из мета-тега HTML страницы логина
+                login_page_url = f"{self.base}/"
+                logger.info(f"[{self.label}] GET login page: {login_page_url}")  # DEBUG
+                
+                page = await s.get(login_page_url)
+                html = await page.text()
+                
+                logger.info(f"[{self.label}] Login page status: {page.status}")  # DEBUG
+                logger.info(f"[{self.label}] Login page HTML length: {len(html)} chars")  # DEBUG
+                
+                m = re.search(r'name="csrf-token"\s+content="([^"]+)"', html)
+                csrf_token = m.group(1) if m else ""
+                self._csrf_token = csrf_token  # DEBUG: сохраняем
+                
+                logger.info(f"[{self.label}] CSRF token: '{csrf_token[:30]}...' (len={len(csrf_token)})")  # DEBUG
 
-                # Логинимся
+                login_url = f"{self.base}/login"
+                login_payload = {"username": self.user, "password": self.password}
+                
+                logger.info(f"[{self.label}] POST login: {login_url}")  # DEBUG
+                logger.info(f"[{self.label}] Login payload: {json.dumps(login_payload)}")  # DEBUG
+
                 resp = await s.post(
-                    f"{self.base}/login",
-                    json={"username": self.user, "password": self.password},
+                    login_url,
+                    json=login_payload,
                     headers={
                         "Content-Type": "application/json",
-                        "X-Csrf-Token": self._csrf_token,
+                        "X-Csrf-Token": csrf_token,
                     },
                 )
-                logger.debug(f"[{self.label}] Login status: {resp.status}")
+                
+                logger.info(f"[{self.label}] Login response status: {resp.status}")  # DEBUG
                 
                 if resp.status == 200:
                     data = await resp.json()
+                    logger.info(f"[{self.label}] Login response body: {json.dumps(data)[:200]}")  # DEBUG
+                    
                     if data.get("success"):
-                        # Сохраняем куки
-                        all_cookies = []
-                        for cookie in s.cookie_jar:
-                            all_cookies.append(f"{cookie.key}={cookie.value}")
+                        all_cookies = [f"{c.key}={c.value}" for c in s.cookie_jar]
                         self._cookie = "; ".join(all_cookies)
-                        
-                        # После успешного логина получаем НОВЫЙ CSRF токен 
-                        # (сессионный, меняется после логина)
-                        self._csrf_token = await self._extract_csrf_from_page()
-                        
-                        logger.debug(f"[{self.label}] Login OK, CSRF: {self._csrf_token[:20]}...")
+                        logger.info(f"[{self.label}] Login OK. Cookies: {self._cookie[:100]}...")  # DEBUG
+                        logger.info(f"[{self.label}] Total cookies: {len(all_cookies)}")  # DEBUG
                         return self._cookie
                     else:
-                        logger.error(f"[{self.label}] Login failed: {data}")
+                        logger.error(f"[{self.label}] Login response not success: {data}")  # DEBUG
+                else:
+                    raw = await resp.text()
+                    logger.error(f"[{self.label}] Login failed, status={resp.status}, body={raw[:200]}")  # DEBUG
             except Exception as e:
-                logger.error(f"[{self.label}] Login exception: {e}")
+                logger.error(f"[{self.label}] xui login exception: {e}", exc_info=True)  # DEBUG
+        logger.error(f"[{self.label}] xui login failed")
         return None
-
-    async def _ensure_auth(self) -> bool:
-        """Проверяет и обновляет аутентификацию при необходимости."""
-        if not self._csrf_token or not self._cookie:
-            return bool(await self.login())
-        return True
 
     async def _headers(self) -> dict:
-        """Возвращает заголовки с CSRF токеном и куками."""
-        await self._ensure_auth()
-        return {
+        if not self._cookie:
+            logger.info(f"[{self.label}] No cookies, attempting login...")  # DEBUG
+            await self.login()
+        
+        headers = {
             "Cookie": self._cookie or "",
             "Content-Type": "application/json",
-            "X-Csrf-Token": self._csrf_token or "",
         }
-
-    async def _refresh_csrf_if_needed(self, response_status: int) -> bool:
-        """Обновляет CSRF токен если получили 401/403."""
-        if response_status in (401, 403):
-            logger.warning(f"[{self.label}] Auth failed (status {response_status}), re-logging in...")
-            self._csrf_token = None
-            self._cookie = None
-            return bool(await self.login())
-        return True
+        
+        # DEBUG: добавляем CSRF токен в заголовки если он есть
+        if self._csrf_token:
+            headers["X-Csrf-Token"] = self._csrf_token
+        
+        logger.info(f"[{self.label}] Headers: Cookie={self._cookie[:50] if self._cookie else 'EMPTY'}..., X-Csrf-Token={self._csrf_token[:20] if self._csrf_token else 'EMPTY'}...")  # DEBUG
+        
+        return headers
 
     async def post(self, path: str, payload: dict) -> dict | None:
-        """POST запрос с авто-перелогином при 401/403."""
+        """POST с авто-реauth при 401/403."""
         s = await self.get_session()
         for attempt in range(2):
             headers = await self._headers()
+            
+            full_url = f"{self.base}{path}"
+            logger.info(f"[{self.label}] >>> POST attempt={attempt+1}: {full_url}")  # DEBUG
+            logger.info(f"[{self.label}] >>> Payload: {json.dumps(payload)[:500]}")  # DEBUG
+            
             try:
-                resp = await s.post(f"{self.base}{path}", json=payload, headers=headers)
-                
-                # Проверяем не истекла ли сессия
-                if not await self._refresh_csrf_if_needed(resp.status):
-                    continue
-                
+                resp = await s.post(full_url, json=payload, headers=headers)
                 raw = await resp.text()
-                logger.debug(f"[{self.label}] POST {path} -> {resp.status}: {raw[:200]}")
                 
+                logger.info(f"[{self.label}] <<< Status: {resp.status}")  # DEBUG
+                logger.info(f"[{self.label}] <<< Response: {raw[:500]}")  # DEBUG
+                
+                if resp.status in (401, 403):
+                    logger.warning(f"[{self.label}] session expired (status={resp.status}), re-logging in...")
+                    self._cookie = None
+                    self._csrf_token = None  # DEBUG
+                    await self.login()
+                    continue
+                    
                 if resp.status == 404:
-                    logger.error(f"[{self.label}] 404 Not Found for {path} — check API endpoint")
+                    logger.error(f"[{self.label}] 404 Not Found for {path}")  # DEBUG
+                    logger.error(f"[{self.label}] Full URL: {full_url}")  # DEBUG
                     return None
-                
+                    
                 if not raw.strip():
-                    logger.error(f"[{self.label}] Empty response for {path}")
+                    logger.error(f"[{self.label}] empty response, status={resp.status}")
                     return None
                     
                 return json.loads(raw)
             except Exception as e:
-                logger.error(f"[{self.label}] POST exception for {path}: {e}")
-                return None
-        return None
-
-    async def get(self, path: str) -> dict | None:
-        """GET запрос с авто-перелогином."""
-        s = await self.get_session()
-        for attempt in range(2):
-            headers = await self._headers()
-            try:
-                resp = await s.get(f"{self.base}{path}", headers=headers)
-                
-                if not await self._refresh_csrf_if_needed(resp.status):
-                    continue
-                
-                raw = await resp.text()
-                if not raw.strip():
-                    logger.error(f"[{self.label}] Empty GET response for {path}")
-                    return None
-                    
-                return json.loads(raw)
-            except Exception as e:
-                logger.error(f"[{self.label}] GET exception for {path}: {e}")
+                logger.error(f"[{self.label}] POST exception: {e}", exc_info=True)  # DEBUG
                 return None
         return None
 
 
-# ==================== Инициализация ====================
 _base = _build_base(config.PANEL_HOST, config.PANEL_PORT, config.PANEL_BASE_PATH)
+logger.info(f"Panel base URL: {_base}")  # DEBUG
+
 _panel = _PanelSession(_base, config.PANEL_USER, config.PANEL_PASS, "MASTER")
 
 _panels: dict[str, _PanelSession] = {
@@ -181,19 +167,12 @@ _panels: dict[str, _PanelSession] = {
     "nl": _panel,
 }
 
-# Inbound IDs из API
 REGION_INBOUNDS: dict[str, tuple[int, int]] = {
-    "fi": (1, 2),   # (desktop=443, mobile=8443)
-    "nl": (3, 4),   # (desktop=443, mobile=8443)
+    "fi": (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE),
+    "nl": (config.INBOUND_NL_DESKTOP, config.INBOUND_NL_MOBILE),
 }
 
-# Формат email для разных inbound'ов
-# FI: base_email и base_email+"m"
-# NL: base_email+"_3" и base_email+"_4"
-EMAIL_SUFFIXES = {
-    "fi": {"desktop": "", "mobile": "m"},
-    "nl": {"desktop": "_3", "mobile": "_4"},
-}
+logger.info(f"Inbound IDs - FI: {REGION_INBOUNDS['fi']}, NL: {REGION_INBOUNDS['nl']}")  # DEBUG
 
 REGION_LABELS = {
     "fi": "🇫🇮 Finland",
@@ -201,32 +180,20 @@ REGION_LABELS = {
 }
 
 
-def _client_email(base_email: str, inbound_type: str, region: str) -> str:
-    """Формирует email клиента с правильным суффиксом."""
-    suffix = EMAIL_SUFFIXES.get(region, {}).get(inbound_type, "")
-    return f"{base_email}{suffix}"
-
-
 def _sub_link(email: str) -> str:
-    """Ссылка на подписку."""
+    """Ссылка на подписку — одна для всех регионов (единая панель)."""
     return f"{config.SUB_HOST}:{config.SUB_PORT}/sub/{email}"
 
 
 async def close_session() -> None:
-    """Закрыть сессию."""
+    """Закрыть сессию (вызывается при shutdown бота)."""
     await _panel.close()
 
 
-async def login() -> str | None:
-    """Принудительный логин."""
-    return await _panel.login()
-
-
-# ==================== API методы ====================
-
 async def create_client(email: str, days: int, devices_limit: int = 4,
                         region: str = "fi") -> dict | None:
-    """Создаёт клиента в desktop и mobile inbound'ах."""
+    logger.info(f"create_client called: email={email}, days={days}, limit={devices_limit}, region={region}")  # DEBUG
+    
     inbounds = REGION_INBOUNDS.get(region)
     panel = _panels.get(region)
     if not inbounds or not panel:
@@ -237,9 +204,11 @@ async def create_client(email: str, days: int, devices_limit: int = 4,
     client_id = str(uuid.uuid4())
     expire_ts = int((datetime.now(timezone.utc) + timedelta(days=days)).timestamp() * 1000)
     label = REGION_LABELS.get(region, region)
+    
+    logger.info(f"Client ID: {client_id}, Expire TS: {expire_ts}, Label: {label}")  # DEBUG
 
     def _client_payload(inbound_id: int, email_val: str) -> dict:
-        return {
+        payload = {
             "id": inbound_id,
             "settings": json.dumps({
                 "clients": [{
@@ -251,31 +220,36 @@ async def create_client(email: str, days: int, devices_limit: int = 4,
                     "expiryTime": expire_ts,
                     "enable": True,
                     "tgId": "",
-                    "subId": email,  # subId = базовый email без суффикса
+                    "subId": email,
                     "flow": "xtls-rprx-vision",
                 }]
             }),
         }
+        logger.info(f"Payload for inbound {inbound_id}, email {email_val}: {json.dumps(payload)[:500]}")  # DEBUG
+        return payload
 
     url = "/panel/api/inbounds/addClient"
+    logger.info(f"Using API URL: {url}")  # DEBUG
 
     # Desktop
-    desktop_email = _client_email(email, "desktop", region)
-    data1 = await panel.post(url, _client_payload(desktop_inbound, desktop_email))
+    logger.info(f"[{region.upper()}] Adding desktop client to inbound {desktop_inbound}")  # DEBUG
+    data1 = await panel.post(url, _client_payload(desktop_inbound, email))
     if not data1 or not data1.get("success"):
-        logger.error(f"[{region.upper()}] addClient desktop failed for {desktop_email}: {data1}")
+        logger.error(f"[{region.upper()}] xui addClient desktop failed: {data1}")
         return None
-    logger.info(f"[{region.upper()}] Desktop client created: {desktop_email}")
+    
+    logger.info(f"[{region.upper()}] Desktop client added successfully")  # DEBUG
 
     # Mobile
-    mobile_email = _client_email(email, "mobile", region)
-    data2 = await panel.post(url, _client_payload(mobile_inbound, mobile_email))
+    logger.info(f"[{region.upper()}] Adding mobile client to inbound {mobile_inbound}")  # DEBUG
+    data2 = await panel.post(url, _client_payload(mobile_inbound, f"{email}m"))
     if not data2 or not data2.get("success"):
-        logger.warning(f"[{region.upper()}] addClient mobile failed for {mobile_email} (desktop OK)")
+        logger.warning(f"[{region.upper()}] xui addClient mobile failed: {data2} (desktop OK)")
     else:
-        logger.info(f"[{region.upper()}] Mobile client created: {mobile_email}")
+        logger.info(f"[{region.upper()}] Mobile client added successfully")  # DEBUG
 
     sub_link = _sub_link(email)
+    logger.info(f"Subscription link: {sub_link}")  # DEBUG
     return {"client_id": client_id, "email": email, "sub_link": sub_link}
 
 
@@ -283,56 +257,72 @@ async def update_client_expiry(client_id: str, email: str,
                                 extra_days: int, current_expire_ms: int,
                                 region: str = "fi",
                                 devices_limit: int = 4) -> bool:
-    """Продлевает клиента на extra_days дней."""
+    logger.info(f"update_client_expiry: client_id={client_id}, email={email}, extra_days={extra_days}, region={region}")  # DEBUG
+    
     new_expire = current_expire_ms + extra_days * 86_400_000
-    inbounds = REGION_INBOUNDS.get(region)
+    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE))
     panel = _panels.get(region, _panel)
-    if not inbounds:
-        return False
-
-    desktop_inbound, mobile_inbound = inbounds
     url = f"/panel/api/inbounds/updateClient/{client_id}"
     results = []
 
-    # Обновляем оба inbound'а
-    for inbound_type, inbound_id in [("desktop", desktop_inbound), ("mobile", mobile_inbound)]:
-        email_val = _client_email(email, inbound_type, region)
-        payload = {
-            "id": inbound_id,
-            "settings": json.dumps({"clients": [{
-                "id": client_id,
-                "email": email_val,
-                "expiryTime": new_expire,
-                "enable": True,
-                "flow": "xtls-rprx-vision",
-                "subId": email,
-                "totalGB": 0,
-                "tgId": "",
-                "limitIp": devices_limit,
-            }]}),
-        }
-        data = await panel.post(url, payload)
-        success = bool(data and data.get("success"))
-        results.append(success)
-        logger.debug(f"[{region.upper()}] Update expiry for {email_val}: {'OK' if success else 'FAILED'}")
+    desktop_inbound, mobile_inbound = inbounds
+
+    logger.info(f"Updating desktop inbound {desktop_inbound}, new expire: {new_expire}")  # DEBUG
+    payload_desktop = {
+        "id": desktop_inbound,
+        "settings": json.dumps({"clients": [{
+            "id": client_id,
+            "email": email,
+            "expiryTime": new_expire,
+            "enable": True,
+            "flow": "xtls-rprx-vision",
+            "subId": email,
+            "totalGB": 0,
+            "tgId": "",
+            "limitIp": devices_limit,
+        }]}),
+    }
+    data = await panel.post(url, payload_desktop)
+    results.append(bool(data and data.get("success")))
+    logger.info(f"Desktop update result: {results[-1]}")  # DEBUG
+
+    logger.info(f"Updating mobile inbound {mobile_inbound}")  # DEBUG
+    payload_mobile = {
+        "id": mobile_inbound,
+        "settings": json.dumps({"clients": [{
+            "id": client_id,
+            "email": f"{email}m",
+            "expiryTime": new_expire,
+            "enable": True,
+            "flow": "xtls-rprx-vision",
+            "subId": email,
+            "totalGB": 0,
+            "tgId": "",
+            "limitIp": devices_limit,
+        }]}),
+    }
+    data = await panel.post(url, payload_mobile)
+    results.append(bool(data and data.get("success")))
+    logger.info(f"Mobile update result: {results[-1]}")  # DEBUG
 
     return any(results)
 
 
 async def update_client_ip_limit(client_id: str, email: str, limit: int,
                                   region: str = "fi") -> bool:
-    """Обновляет лимит IP-адресов."""
-    inbounds = REGION_INBOUNDS.get(region)
+    logger.info(f"update_client_ip_limit: client_id={client_id}, email={email}, limit={limit}, region={region}")  # DEBUG
+    
+    inbounds = REGION_INBOUNDS.get(region, (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE))
     panel = _panels.get(region, _panel)
-    if not inbounds:
-        return False
-
-    desktop_inbound, mobile_inbound = inbounds
     url = f"/panel/api/inbounds/updateClient/{client_id}"
+    desktop_inbound, mobile_inbound = inbounds
     results = []
 
-    for inbound_type, inbound_id in [("desktop", desktop_inbound), ("mobile", mobile_inbound)]:
-        email_val = _client_email(email, inbound_type, region)
+    for inbound_id, email_val in [
+        (desktop_inbound, email),
+        (mobile_inbound, f"{email}m"),
+    ]:
+        logger.info(f"Updating IP limit for inbound {inbound_id}, email {email_val}")  # DEBUG
         payload = {
             "id": inbound_id,
             "settings": json.dumps({"clients": [{
@@ -353,27 +343,44 @@ async def update_client_ip_limit(client_id: str, email: str, limit: int,
 
 
 async def get_client_traffic(email: str, region: str = "fi") -> dict | None:
-    """Получает трафик клиента по базовому email."""
+    logger.info(f"get_client_traffic: email={email}, region={region}")  # DEBUG
+    
     panel = _panels.get(region, _panel)
-    # API возвращает трафик по subId (базовый email без суффикса)
-    path = f"/panel/api/inbounds/getClientTraffics/{email}"
-    data = await panel.get(path)
-    if data and data.get("success"):
-        return data.get("obj")
+    s = await panel.get_session()
+    headers = await panel._headers()
+    
+    url = f"{panel.base}/panel/api/inbounds/getClientTraffics/{email}"
+    logger.info(f"GET traffic URL: {url}")  # DEBUG
+    
+    try:
+        resp = await s.get(url, headers=headers)
+        logger.info(f"Traffic response status: {resp.status}")  # DEBUG
+        
+        data = await resp.json()
+        if data.get("success"):
+            logger.info(f"Traffic data: {json.dumps(data.get('obj'))[:200]}")  # DEBUG
+            return data.get("obj")
+        else:
+            logger.warning(f"Traffic request not success: {data}")  # DEBUG
+    except Exception as e:
+        logger.warning(f"get_client_traffic error [{region}]: {e}", exc_info=True)  # DEBUG
     return None
 
 
 async def get_online_count(email: str, region: str = "fi") -> int | None:
-    """Получает количество онлайн-сессий."""
-    panel = _panels.get(region, _panel)
-    # Используем desktop email для проверки онлайн
-    desktop_email = _client_email(email, "desktop", region)
-    path = f"/panel/api/inbounds/clientIps/{desktop_email}"
+    logger.info(f"get_online_count: email={email}, region={region}")  # DEBUG
     
+    panel = _panels.get(region, _panel)
     s = await panel.get_session()
     headers = await panel._headers()
+    
+    url = f"{panel.base}/panel/api/inbounds/clientIps/{email}"
+    logger.info(f"Online count URL: {url}")  # DEBUG
+    
     try:
-        resp = await s.post(f"{panel.base}{path}", headers=headers)
+        resp = await s.post(url, headers=headers)
+        logger.info(f"Online count response status: {resp.status}")  # DEBUG
+        
         if resp.status != 200:
             return None
         data = await resp.json()
@@ -382,9 +389,17 @@ async def get_online_count(email: str, region: str = "fi") -> int | None:
             if not obj:
                 return 0
             if isinstance(obj, list):
-                return len(obj)
+                count = len(obj)
+                logger.info(f"Online count (list): {count}")  # DEBUG
+                return count
             ips = [ip.strip() for ip in str(obj).split("\n") if ip.strip()]
-            return len(ips)
+            count = len(ips)
+            logger.info(f"Online count (text): {count}")  # DEBUG
+            return count
     except Exception as e:
-        logger.warning(f"get_online_count failed for {desktop_email} [{region}]: {e}")
+        logger.warning(f"get_online_count failed for {email} [{region}]: {e}", exc_info=True)  # DEBUG
     return None
+
+
+async def login():
+    return await _panel.login()
