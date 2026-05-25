@@ -142,17 +142,16 @@ async def create_client(
     """
     logger.info(f"create_client: email={email}, days={days}, limit={devices_limit}, region={region}")
 
-    inbounds = REGION_INBOUNDS.get(region)
-    panel = _panels.get(region)
-    if not inbounds or not panel:
-        logger.error(f"Unknown region: {region}")
-        return None
+    panel = _panels.get(region, _panel)
 
-    desktop_inbound, mobile_inbound = inbounds
+    # Собираем все инбаунды со всех регионов
+    all_inbound_ids = []
+    for r_inbounds in REGION_INBOUNDS.values():
+        all_inbound_ids.extend(list(r_inbounds))
     client_id = str(uuid.uuid4())
     expire_ts = int((datetime.now(timezone.utc) + timedelta(days=days)).timestamp() * 1000)
 
-    logger.info(f"client_id={client_id}, expire_ts={expire_ts}, inbounds={desktop_inbound},{mobile_inbound}")
+    logger.info(f"client_id={client_id}, expire_ts={expire_ts}, inbounds={all_inbound_ids}")
 
     payload = {
         "client": {
@@ -166,7 +165,7 @@ async def create_client(
             "subId": email,
             "flow": "xtls-rprx-vision",
         },
-        "inboundIds": [desktop_inbound, mobile_inbound],
+        "inboundIds": all_inbound_ids,
     }
 
     data = await panel.post("/panel/api/clients/add", payload)
