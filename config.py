@@ -12,7 +12,7 @@ class Config:
     ])
     REQUIRED_CHANNEL_ID: str = os.getenv("REQUIRED_CHANNEL_ID", "@EscapeTheMatrixVPN")
     REQUIRED_CHANNEL_URL: str = os.getenv("REQUIRED_CHANNEL_URL", "https://t.me/EscapeTheMatrixVPN")
-    SITE_URL: str = "https://escapethematrix.to"
+    SITE_URL: str = "https://www.escapethematrix.to"
     FAQ_URL: str = os.getenv("FAQ_URL", "https://telegra.ph/VPN-FAQ-04-12")  
 
     PANEL_HOST: str = os.getenv("PANEL_HOST", "https://vpn.escapethematrix.to")
@@ -49,7 +49,7 @@ class Config:
 
     REDIS_URL: str = os.getenv("REDIS_URL", "")
 
-    MINI_APP_URL: str = os.getenv("MINI_APP_URL", "https://escapethematrix.to/miniapp")
+    MINI_APP_URL: str = os.getenv("MINI_APP_URL", "https://www.escapethematrix.to/miniapp")
     INTERNAL_SECRET: str = os.getenv("INTERNAL_SECRET", "")
     INTERNAL_API_PORT: int = int(os.getenv("INTERNAL_API_PORT", "8000"))
     

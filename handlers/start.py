@@ -6,7 +6,7 @@ from database.db import get_user, create_user, count_referrals, get_balance, get
 from keyboards.kb import (
     lang_keyboard, subscribe_keyboard, main_menu,
     back_keyboard, profile_keyboard, topup_method_keyboard, region_keyboard, REGIONS, region_label,
-    plans_keyboard,
+    plans_keyboard, all_regions_label
 )
 from locales.texts import t
 from utils.helpers import generate_profile_key, format_datetime, days_left
@@ -239,7 +239,7 @@ async def cmd_plans(message: Message):
         return
     lang = user.get("language", "ru")
     balance = await get_balance(message.from_user.id)
-    text = t("plans_header", lang, balance=f"{balance:.2f}", region="🌍 FI + NL")
+    text = t("plans_header", lang, balance=f"{balance:.2f}", region=all_regions_label(lang))
     await message.answer(text, reply_markup=plans_keyboard(lang, "fi"), parse_mode="HTML")
 
 

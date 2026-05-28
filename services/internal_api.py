@@ -8,7 +8,7 @@ import os
 from aiohttp import web
 from database.db import (
     get_active_subscription, get_balance, get_payment_by_provider_id,
-    get_user, count_referrals, mark_payment_paid, update_balance,
+    get_user, count_referrals, mark_payment_paid, update_balance, get_pool
 )
 from utils.helpers import days_left
 from config import config
@@ -248,7 +248,6 @@ async def handle_web_subscription(request: web.Request) -> web.Response:
         now = datetime.now(tz.utc)
         expires_at = now + timedelta(days=days)
 
-        from database.db import get_pool
         db = get_pool()
         async with db.acquire() as conn:
             await conn.execute(

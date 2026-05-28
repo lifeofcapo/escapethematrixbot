@@ -13,6 +13,10 @@ def region_label(region_id: str, lang: str) -> str:
     region = REGIONS.get(region_id, REGIONS["fi"])
     return f"{region['flag']} {region[f'name_{lang}']}"
 
+def all_regions_label(lang: str) -> str:
+    if lang == "ru":
+        return "🇫🇮 Финляндия + 🇳🇱 Нидерланды"
+    return "🇫🇮 Finland + 🇳🇱 Netherlands"
 
 def lang_keyboard(referred_by: int = None) -> InlineKeyboardMarkup:
     def cb(lang: str) -> str:

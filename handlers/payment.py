@@ -16,7 +16,7 @@ from keyboards.kb import (
     plans_keyboard, pay_now_keyboard, back_keyboard,
     topup_method_keyboard, topup_crypto_keyboard, confirm_purchase_keyboard,
     region_keyboard, REGIONS, region_label,
-    payment_success_keyboard,
+    payment_success_keyboard, all_regions_label,
 )
 from locales.texts import t
 from services.yookassa import create_yookassa_payment, check_yookassa_payment
@@ -104,7 +104,7 @@ async def show_plans(callback: CallbackQuery):
     region_name = region_info[f"name_{lang}"]
     balance = await get_balance(callback.from_user.id)
 
-    text = t("plans_header", lang, balance=f"{balance:.2f}", region=f"{flag} {region_name}")
+    text = t("plans_header", lang, balance=f"{balance:.2f}", region=all_regions_label(lang))
     await _edit_or_answer(
         callback,
         text,
@@ -123,7 +123,7 @@ async def show_plans_direct(callback: CallbackQuery):
     flag = region_info["flag"]
     region_name = region_info[f"name_{lang}"]
 
-    text = t("plans_header", lang, balance=f"{balance:.2f}", region=f"{flag} {region_name}")
+    text = t("plans_header", lang, balance=f"{balance:.2f}", region=all_regions_label(lang))
     await _edit_or_answer(
         callback,
         text,
@@ -301,7 +301,7 @@ async def _activate_plan_balance(bot, user_id: int, plan_id: str, lang: str, reg
             old_expire_ms,
             region=region,
         )
-        region_str = region_label(region, lang)
+        region_str = all_regions_label(lang)
         await bot.send_message(
             user_id,
             t("payment_success", lang, sub_link=existing_sub["sub_link"], region_label=region_str),
@@ -333,7 +333,7 @@ async def _activate_plan_balance(bot, user_id: int, plan_id: str, lang: str, reg
         region=region,
     )
 
-    region_str = region_label(region, lang)
+    region_str = all_regions_label(lang)
     await bot.send_message(
         user_id,
         t("payment_success", lang, sub_link=sub_link, region_label=region_str),

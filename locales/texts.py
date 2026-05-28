@@ -35,15 +35,15 @@ TEXTS = {
     },
 
     "btn_profile":      {"ru": "👤 Профиль",          "en": "👤 Profile"},
-    "btn_subscribe":    {"ru": "💎 Купить",          "en": "💎 Buy"},
+    "btn_subscribe":    {"ru": "💎 Купить",            "en": "💎 Buy"},
     "btn_topup":        {"ru": "💳 Пополнить баланс",  "en": "💳 Top up balance"},
-    "btn_support":      {"ru": "🆘 Поддержка",          "en": "🆘 Support"},
-    "btn_faq":          {"ru": "❓ FAQ",                "en": "❓ FAQ"},
-    "btn_site":         {"ru": "🌐 Наш сайт",           "en": "🌐 Our website"},
-    "btn_back":         {"ru": "◀️ Назад",              "en": "◀️ Back"},
-    "btn_referral":     {"ru": "👥 Рефералы",           "en": "👥 Referrals"},
-    "btn_confirm_buy":  {"ru": "✅ Подтвердить покупку", "en": "✅ Confirm purchase"},
-    "btn_change_lang":  {"ru": "🌍 Сменить язык",       "en": "🌍 Change language"},
+    "btn_support":      {"ru": "🆘 Поддержка",         "en": "🆘 Support"},
+    "btn_faq":          {"ru": "❓ FAQ",               "en": "❓ FAQ"},
+    "btn_site":         {"ru": "🌐 Наш сайт",          "en": "🌐 Our website"},
+    "btn_back":         {"ru": "◀️ Назад",             "en": "◀️ Back"},
+    "btn_referral":     {"ru": "👥 Рефералы",          "en": "👥 Referrals"},
+    "btn_confirm_buy":  {"ru": "✅ Подтвердить покупку","en": "✅ Confirm purchase"},
+    "btn_change_lang":  {"ru": "🌍 Сменить язык",      "en": "🌍 Change language"},
 
     "profile": {
         "ru": (
@@ -199,7 +199,7 @@ TEXTS = {
             "🔗 Ваша ссылка подписки:\n"
             "<code>{sub_link}</code>\n\n"
             "Скопируйте ссылку одним нажатием\n\n"
-            "📱 Вставьте ссылку в приложение (Happ, FLClashX, NekoBox и др.)"
+            "📱 Вставьте ссылку в приложение (Happ, FlClashX, NekoBox и др.)"
         ),
         "en": (
             "✅ <b>Subscription activated!</b>\n\n"
@@ -207,7 +207,7 @@ TEXTS = {
             "🔗 Your subscription link:\n"
             "<code>{sub_link}</code>\n\n"
             "Copy the link by one click\n\n"
-            "📱 Paste the link into your VPN app (Happ, FLClashX, NekoBox, etc.)"
+            "📱 Paste the link into your VPN app (Happ, FlClashX, NekoBox, etc.)"
         ),
     },
     "payment_failed": {
@@ -331,184 +331,213 @@ TEXTS = {
         "ru": "📱 <b>Устройства</b>\n\nТекущий лимит: <b>{current}</b>\nМаксимум: <b>{maximum}</b>",
         "en": "📱 <b>Devices</b>\n\nCurrent limit: <b>{current}</b>\nMaximum: <b>{maximum}</b>",
     },
- 
+
     "setup_choose_platform": {
         "ru": (
             "📲 <b>Как подключить VPN</b>\n\n"
-            "1️⃣ Скачай приложение под свою платформу (кнопки ниже)\n"
-            "   Рекомендуем <b>Happ</b> — работает на всех устройствах\n\n"
-            "2️⃣ Открой приложение → нажми <b>«+»</b>\n\n"
-            "3️⃣ Выбери <b>«Импорт по ссылке»</b> и вставь\n"
-            "   ссылку подписки из раздела 👤 Профиль\n\n"
-            "4️⃣ Нажми <b>«Добавить»</b> — готово ✅\n\n"
+            "1️⃣ Выбери свою платформу кнопкой ниже\n"
+            "2️⃣ Скачай рекомендованное приложение\n"
+            "3️⃣ Открой приложение → нажми <b>«+»</b>\n"
+            "4️⃣ Выбери <b>«Импорт по ссылке»</b> и вставь\n"
+            "   ссылку подписки из раздела 👤 Профиль\n"
+            "5️⃣ Нажми <b>«Добавить»</b> — готово ✅\n\n"
+            "💡 Рекомендуем <b>Happ</b> — работает на всех платформах,\n"
+            "простая установка, поддержка пульта на Android TV.\n\n"
             "👇 Выбери свою платформу:"
         ),
         "en": (
             "📲 <b>How to connect VPN</b>\n\n"
-            "1️⃣ Download an app for your platform (buttons below)\n"
-            "   We recommend <b>Happ</b> — works on all devices\n\n"
-            "2️⃣ Open the app → tap <b>«+»</b>\n\n"
-            "3️⃣ Choose <b>«Import from URL»</b> and paste\n"
-            "   your subscription link from 👤 Profile\n\n"
-            "4️⃣ Tap <b>«Add»</b> — you're in ✅\n\n"
+            "1️⃣ Choose your platform below\n"
+            "2️⃣ Download the recommended app\n"
+            "3️⃣ Open the app → tap <b>«+»</b>\n"
+            "4️⃣ Choose <b>«Import from URL»</b> and paste\n"
+            "   your subscription link from 👤 Profile\n"
+            "5️⃣ Tap <b>«Add»</b> — you're in ✅\n\n"
+            "💡 We recommend <b>Happ</b> — works on all platforms,\n"
+            "easy setup, remote control support on Android TV.\n\n"
             "👇 Choose your platform:"
         ),
     },
- 
+
     "setup_android": {
         "ru": (
             "🤖 <b>Подключение на Android</b>\n\n"
-            "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n"
-            "Выберите любое приложение из списка, скачайте и вставьте "
-            "ссылку подписки из вашего профиля.\n\n"
-            "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.v2box.v2ray\">V2Box</a> — простой и удобный интерфейс\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.v2ray.ang\">V2RayNG</a> — популярный, хорошая поддержка\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=io.nekohasekai.sfa\">Sing-Box</a> — официальный клиент протокола\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.v2raytun.android\">V2RayTun</a> — лёгкий и быстрый\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.npv.tunnel\">NPV Tunnel</a> — стабильный вариант\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.happ.vpn\">Happ</a> — поддерживает Sing-Box конфиги\n\n"
+            "Протокол: <b>VLESS + Reality</b> — один из самых защищённых.\n\n"
+            "⭐️ <b>Рекомендуем:</b>\n\n"
+            "◆ <b><a href=\"https://play.google.com/store/apps/details?id=com.happproxy&pli=1\">Happ</a></b> — самый простой способ подключения.\n"
+            "Поддерживает импорт по ссылке подписки, удобный интерфейс.\n\n"
+            "⬢ <b><a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/app-release.apk\">FlClashX</a></b> — мощный клиент на базе Clash.\n"
+            "Поддерживает подписки, гибкие правила маршрутизации.\n\n"
+            "📦 <b>Другие приложения:</b>\n\n"
+            "◈ <a href=\"https://play.google.com/store/apps/details?id=llc.itdev.incy&hl=ru&pli=1\">Incy</a> — новый клиент, простой интерфейс\n"
+            "▲ <a href=\"https://play.google.com/store/apps/details?id=com.v2raytun.android\">V2RayTun</a> — лёгкий и быстрый\n"
+            "◬ <a href=\"https://github.com/MatsuriDayo/NekoBoxForAndroid/releases/latest\">NekoBox</a> — гибкий, для продвинутых\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
             "🤖 <b>Android Setup</b>\n\n"
-            "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n"
-            "Choose any app below, install it, and paste your subscription link from the Profile section.\n\n"
-            "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.v2box.v2ray\">V2Box</a> — clean and easy interface\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.v2ray.ang\">V2RayNG</a> — popular, great support\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=io.nekohasekai.sfa\">Sing-Box</a> — official protocol client\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.v2raytun.android\">V2RayTun</a> — lightweight and fast\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.npv.tunnel\">NPV Tunnel</a> — stable option\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.happ.vpn\">Happ</a> — supports Sing-Box configs\n\n"
+            "Protocol: <b>VLESS + Reality</b> — one of the most secure.\n\n"
+            "⭐️ <b>Recommended:</b>\n\n"
+            "◆ <b><a href=\"https://play.google.com/store/apps/details?id=com.happproxy&pli=1\">Happ</a></b> — easiest way to connect.\n"
+            "Supports subscription link import, clean interface.\n\n"
+            "⬢ <b><a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/app-release.apk\">FlClashX</a></b> — powerful Clash-based client.\n"
+            "Supports subscriptions and flexible routing rules.\n\n"
+            "📦 <b>Other apps:</b>\n\n"
+            "◈ <a href=\"https://play.google.com/store/apps/details?id=llc.itdev.incy&hl=ru&pli=1\">Incy</a> — new client, simple interface\n"
+            "▲ <a href=\"https://play.google.com/store/apps/details?id=com.v2raytun.android\">V2RayTun</a> — lightweight and fast\n"
+            "◬ <a href=\"https://github.com/MatsuriDayo/NekoBoxForAndroid/releases/latest\">NekoBox</a> — flexible, for advanced users\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
- 
+
     "setup_ios": {
         "ru": (
             "🍎 <b>Подключение на iPhone / iPad (iOS)</b>\n\n"
-            "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n"
-            "Некоторые приложения платные или доступны только в иностранном App Store.\n\n"
-            "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://apps.apple.com/app/happ-proxy-utility/id6504287215\">Happ</a> — бесплатный, поддерживает Sing-Box\n\n"
-            "• <a href=\"https://apps.apple.com/app/v2box-v2ray-client/id6446814690\">V2Box</a> — бесплатный, хороший\n"
-            "• <a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a> — бесплатный, удобный\n"
-            "• <a href=\"https://apps.apple.com/app/v2raytun/id6476628951\">V2RayTun</a> — бесплатный, лёгкий\n"
-            "• <a href=\"https://apps.apple.com/app/npv-tunnel/id1629465476\">NPV Tunnel</a> — бесплатный\n"
+            "Протокол: <b>VLESS + Reality</b>.\n\n"
+            "⭐️ <b>Рекомендуем:</b>\n\n"
+            "◆ <b><a href=\"https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973\">Happ</a></b> (RU App Store) — бесплатный, простой.\n"
+            "Импортируй ссылку подписки одной кнопкой.\n"
+            "Также доступен в <a href=\"https://apps.apple.com/us/app/happ-proxy-utility/id6504287215\">Global App Store</a>.\n\n"
+            "✦ <b><a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a></b> — бесплатный, отличная поддержка VLESS.\n\n"
+            "📦 <b>Другие приложения:</b>\n\n"
+            "◈ <a href=\"https://apps.apple.com/ru/app/incy/id6756943388\">Incy</a> — новый, удобный\n"
+            "▲ <a href=\"https://apps.apple.com/us/app/v2raytun/id6476628951\">V2RayTun</a> — лёгкий\n"
+            "◉ <a href=\"https://apps.apple.com/us/app/clash-mi/id6744321968\">ClashMi</a> — на базе Clash\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
             "🍎 <b>iOS Setup (iPhone / iPad)</b>\n\n"
-            "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n"
-            "Some apps are paid or available only in a foreign App Store.\n\n"
-            "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://apps.apple.com/app/happ-proxy-utility/id6504287215\">Happ</a> — free, supports Sing-Box\n\n"
-            "• <a href=\"https://apps.apple.com/app/v2box-v2ray-client/id6446814690\">V2Box</a> — free, solid\n"
-            "• <a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a> — free, convenient\n"
-            "• <a href=\"https://apps.apple.com/app/v2raytun/id6476628951\">V2RayTun</a> — free, lightweight\n"
-            "• <a href=\"https://apps.apple.com/app/npv-tunnel/id1629465476\">NPV Tunnel</a> — free\n"
+            "Protocol: <b>VLESS + Reality</b>.\n\n"
+            "⭐️ <b>Recommended:</b>\n\n"
+            "◆ <b><a href=\"https://apps.apple.com/us/app/happ-proxy-utility/id6504287215\">Happ</a></b> — free, easy to use.\n"
+            "Import subscription link in one tap.\n\n"
+            "✦ <b><a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a></b> — free, great VLESS support.\n\n"
+            "📦 <b>Other apps:</b>\n\n"
+            "◈ <a href=\"https://apps.apple.com/ru/app/incy/id6756943388\">Incy</a> — new, convenient\n"
+            "▲ <a href=\"https://apps.apple.com/us/app/v2raytun/id6476628951\">V2RayTun</a> — lightweight\n"
+            "◉ <a href=\"https://apps.apple.com/us/app/clash-mi/id6744321968\">ClashMi</a> — Clash-based\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
- 
+
     "setup_windows": {
         "ru": (
             "🪟 <b>Подключение на Windows</b>\n\n"
-            "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n"
-            "Все приложения бесплатны и доступны на GitHub.\n\n"
-            "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — удобный GUI, поддерживает sing-box ядро\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekobox-android/releases\">NekoBox</a> — форк NekoRay, активно развивается\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.happ.vpn\">Happ</a> — кроссплатформенный клиент\n"
-            "• <a href=\"https://github.com/2dust/v2rayN/releases\">v2rayN</a> — классика, широкий набор функций\n"
-            "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — на базе Mihomo/Clash\n\n"
-            "💡 <b>Рекомендуем Happ</b> — самая простая установка для новичков.\n\n"
+            "Протокол: <b>VLESS + Reality</b>. Все приложения бесплатны.\n\n"
+            "⭐️ <b>Рекомендуем:</b>\n\n"
+            "◆ <b><a href=\"https://github.com/Happ-proxy/happ-desktop/releases/latest/download/setup-Happ.x64.exe\">Happ</a></b> — скачать .exe, установить и вставить ссылку.\n"
+            "Самый простой вариант для новичков.\n\n"
+            "⬢ <b><a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/FlClash-windows-amd64-setup.exe\">FlClashX</a></b> — мощный Clash-клиент.\n"
+            "Гибкие правила, поддержка подписок.\n\n"
+            "📦 <b>Другие приложения:</b>\n\n"
+            "◐ <a href=\"https://github.com/MatsuriDayo/nekoray/releases/latest\">NekoRay</a> — продвинутый GUI, sing-box ядро\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
             "🪟 <b>Windows Setup</b>\n\n"
-            "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n"
-            "All apps are free and available on GitHub.\n\n"
-            "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — great GUI, supports sing-box core\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekobox-android/releases\">NekoBox</a> — NekoRay fork, actively maintained\n"
-            "• <a href=\"https://play.google.com/store/apps/details?id=com.happ.vpn\">Happ</a> — cross-platform client\n"
-            "• <a href=\"https://github.com/2dust/v2rayN/releases\">v2rayN</a> — classic, feature-rich\n"
-            "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — Mihomo/Clash based\n\n"
-            "💡 <b>We recommend Happ</b> — easiest setup for beginners.\n\n"
+            "Protocol: <b>VLESS + Reality</b>. All apps are free.\n\n"
+            "⭐️ <b>Recommended:</b>\n\n"
+            "◆ <b><a href=\"https://github.com/Happ-proxy/happ-desktop/releases/latest/download/setup-Happ.x64.exe\">Happ</a></b> — download .exe, install and paste link.\n"
+            "Easiest option for beginners.\n\n"
+            "⬢ <b><a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/FlClash-windows-amd64-setup.exe\">FlClashX</a></b> — powerful Clash client.\n"
+            "Flexible rules, subscription support.\n\n"
+            "📦 <b>Other apps:</b>\n\n"
+            "◐ <a href=\"https://github.com/MatsuriDayo/nekoray/releases/latest\">NekoRay</a> — advanced GUI, sing-box core\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
- 
+
     "setup_linux": {
         "ru": (
             "🐧 <b>Подключение на Linux</b>\n\n"
-            "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n\n"
-            "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — GUI, поддерживает sing-box ядро\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekobox-android/releases\">NekoBox</a> — форк NekoRay\n"
-            "• <a href=\"https://sing-box.sagernet.org/installation/package-manager/\">sing-box CLI</a> — консольный клиент, максимальная гибкость\n\n"
-            "💡 <b>Рекомендуем FLClashX и NekoRay</b>.\n\n"
+            "Протокол: <b>VLESS + Reality</b>.\n\n"
+            "⭐️ <b>Рекомендуем:</b>\n\n"
+            "⬢ <b><a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/FlClash-linux-amd64.AppImage\">FlClashX</a></b> — скачать AppImage, запустить.\n"
+            "Поддерживает подписки, удобный интерфейс.\n\n"
+            "◐ <b><a href=\"https://github.com/MatsuriDayo/nekoray/releases/latest\">NekoRay</a></b> — продвинутый GUI,\n"
+            "поддерживает sing-box ядро.\n\n"
+            "📦 <b>Установка FlClashX AppImage:</b>\n"
+            "1. Скачай файл .AppImage\n"
+            "2. <code>chmod +x FlClash-linux-amd64.AppImage</code>\n"
+            "3. Запусти двойным кликом или через терминал\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
             "🐧 <b>Linux Setup</b>\n\n"
-            "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n\n"
-            "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — GUI, supports sing-box core\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekobox-android/releases\">NekoBox</a> — NekoRay fork\n"
-            "• <a href=\"https://sing-box.sagernet.org/installation/package-manager/\">sing-box CLI</a> — console client, max flexibility\n\n"
-            "💡 <b>We recommend FLClashX and NekoRay</b>.\n\n"
+            "Protocol: <b>VLESS + Reality</b>.\n\n"
+            "⭐️ <b>Recommended:</b>\n\n"
+            "⬢ <b><a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/FlClash-linux-amd64.AppImage\">FlClashX</a></b> — download AppImage, run it.\n"
+            "Supports subscriptions, clean interface.\n\n"
+            "◐ <b><a href=\"https://github.com/MatsuriDayo/nekoray/releases/latest\">NekoRay</a></b> — advanced GUI,\n"
+            "supports sing-box core.\n\n"
+            "📦 <b>Installing FlClashX AppImage:</b>\n"
+            "1. Download the .AppImage file\n"
+            "2. <code>chmod +x FlClash-linux-amd64.AppImage</code>\n"
+            "3. Run by double-click or terminal\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
- 
+
     "setup_macos": {
         "ru": (
             "🍏 <b>Подключение на macOS</b>\n\n"
-            "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n\n"
-            "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — поддерживает sing-box ядро\n"
-            "• <a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a> — из Mac App Store, бесплатный\n"
-            "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — Mihomo/Clash, .dmg\n"
-            "• <a href=\"https://apps.apple.com/app/shadowrocket/id932747118\">Shadowrocket</a> — iOS-приложение, работает на Mac M1+\n\n"
-            "💡 <b>Рекомендуем NekoRay</b> — поддерживает Apple Silicon и Intel.\n\n"
+            "Протокол: <b>VLESS + Reality</b>.\n\n"
+            "⭐️ <b>Рекомендуем:</b>\n\n"
+            "⬢ <b>FlClashX</b> — мощный Clash-клиент:\n"
+            "  • <a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/FlClash-darwin-arm64.dmg\">macOS ARM64 (M1/M2/M3)</a>\n"
+            "  • <a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/FlClash-darwin-amd64.dmg\">macOS Intel (AMD64)</a>\n\n"
+            "✦ <b><a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a></b> — бесплатный, из Mac App Store.\n"
+            "Поддерживает VLESS + Reality.\n\n"
+            "📦 <b>Другие приложения:</b>\n\n"
+            "◐ <a href=\"https://github.com/MatsuriDayo/nekoray/releases/latest\">NekoRay</a> — продвинутый, sing-box ядро\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
             "🍏 <b>macOS Setup</b>\n\n"
-            "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n\n"
-            "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">NekoRay</a> — supports sing-box core\n"
-            "• <a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a> — from Mac App Store, free\n"
-            "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — Mihomo/Clash, .dmg\n"
-            "• <a href=\"https://apps.apple.com/app/shadowrocket/id932747118\">Shadowrocket</a> — iOS app, works on Mac M1+\n\n"
-            "💡 <b>We recommend NekoRay</b> — supports Apple Silicon and Intel.\n\n"
+            "Protocol: <b>VLESS + Reality</b>.\n\n"
+            "⭐️ <b>Recommended:</b>\n\n"
+            "⬢ <b>FlClashX</b> — powerful Clash client:\n"
+            "  • <a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/FlClash-darwin-arm64.dmg\">macOS ARM64 (M1/M2/M3)</a>\n"
+            "  • <a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/FlClash-darwin-amd64.dmg\">macOS Intel (AMD64)</a>\n\n"
+            "✦ <b><a href=\"https://apps.apple.com/app/streisand/id6450534064\">Streisand</a></b> — free, from Mac App Store.\n"
+            "Supports VLESS + Reality.\n\n"
+            "📦 <b>Other apps:</b>\n\n"
+            "◐ <a href=\"https://github.com/MatsuriDayo/nekoray/releases/latest\">NekoRay</a> — advanced, sing-box core\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
+
     "setup_tv": {
         "ru": (
             "📺 <b>Подключение на Android TV</b>\n\n"
-            "Наш VPN работает на протоколе <b>Sing-Box / VLESS + Reality</b>.\n"
-            "Для телевизоров важно использовать приложения с поддержкой пульта.\n\n"
-            "📦 <b>Рекомендуемые приложения:</b>\n\n"
-            "• <a href=\"https://github.com/2dust/v2rayNG/releases\">V2RayNG (APK)</a> — работает стабильно, можно установить вручную\n"
-            "• <a href=\"https://github.com/SagerNet/sing-box/releases\">Sing-Box</a> — официальный клиент, но требует ручной настройки\n"
-            "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — для продвинутых пользователей\n\n"
-            "💡 <b>Совет:</b> чаще всего приложения нужно устанавливать через APK (sideload).\n\n"
+            "Протокол: <b>VLESS + Reality</b>.\n"
+            "Приложения устанавливаются через APK (sideload).\n\n"
+            "⭐️ <b>Рекомендуем — Happ:</b>\n\n"
+            "◆ <b>Happ</b> поддерживает пульт и работает прямо на телевизоре.\n\n"
+            "📥 <b>Как установить Happ на Android TV:</b>\n"
+            "Читай подробную инструкцию здесь:\n"
+            "🇷🇺 <a href=\"https://www.happ.su/main/ru/faq/android-tv\">Инструкция на русском</a>\n"
+            "🇬🇧 <a href=\"https://www.happ.su/main/faq/android-tv\">Guide in English</a>\n\n"
+            "📦 <b>Альтернатива — FlClashX:</b>\n\n"
+            "⬢ <a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/app-release.apk\">FlClashX APK</a> — скачать и установить вручную.\n"
+            "Как установить APK на Android TV:\n"
+            "<a href=\"https://club.dns-shop.ru/blog/t-132-televizoryi/43999-failyi-apk-dlya-umnyih-televizorov-na-android/\">Подробная инструкция →</a>\n\n"
             "📌 Ссылку подписки найдёте в разделе <b>👤 Профиль</b>."
         ),
         "en": (
             "📺 <b>Android TV Setup</b>\n\n"
-            "Our VPN uses the <b>Sing-Box / VLESS + Reality</b> protocol.\n"
-            "For TVs, it's important to use apps with remote control support.\n\n"
-            "📦 <b>Recommended apps:</b>\n\n"
-            "• <a href=\"https://github.com/2dust/v2rayNG/releases\">V2RayNG (APK)</a> — stable, can be installed manually\n"
-            "• <a href=\"https://github.com/SagerNet/sing-box/releases\">Sing-Box</a> — official client, but requires manual setup\n"
-            "• <a href=\"https://github.com/clash-verge-rev/clash-verge-rev/releases\">Clash Verge Rev</a> — for advanced users\n\n"
-            "💡 <b>Tip:</b> most apps are installed via APK (sideloading).\n\n"
+            "Protocol: <b>VLESS + Reality</b>.\n"
+            "Apps are installed via APK (sideloading).\n\n"
+            "⭐️ <b>Recommended — Happ:</b>\n\n"
+            "◆ <b>Happ</b> supports remote control and works great on TV.\n\n"
+            "📥 <b>How to install Happ on Android TV:</b>\n"
+            "Follow the detailed guide here:\n"
+            "🇷🇺 <a href=\"https://www.happ.su/main/ru/faq/android-tv\">Guide in Russian</a>\n"
+            "🇬🇧 <a href=\"https://www.happ.su/main/faq/android-tv\">Guide in English</a>\n\n"
+            "📦 <b>Alternative — FlClashX:</b>\n\n"
+            "⬢ <a href=\"https://github.com/pluralplay/FlClashX/releases/latest/download/app-release.apk\">FlClashX APK</a> — download and install manually.\n"
+            "How to sideload APK on Android TV:\n"
+            "<a href=\"https://club.dns-shop.ru/blog/t-132-televizoryi/43999-failyi-apk-dlya-umnyih-televizorov-na-android/\">Detailed guide →</a>\n\n"
             "📌 Find your subscription link in the <b>👤 Profile</b> section."
         ),
     },
