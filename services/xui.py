@@ -1,4 +1,4 @@
-# 3x-ui panel API wrapper v3.1.0
+# 3x-ui panel API wrapper v3.2.8
 # Docs: https://documenter.getpostman.com/view/5146551/2sBXwmPC6M
 import json
 import uuid
@@ -11,11 +11,9 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
-
 def _build_base(host: str, port: int, base_path: str) -> str:
     path = f"/{base_path}" if base_path else ""
     return f"{host}:{port}{path}"
-
 
 class _PanelSession:
     """Сессия к одной 3x-ui панели с Bearer Token авторизацией."""
@@ -95,7 +93,7 @@ class _PanelSession:
             return None
 
 
-# --- инициализация ---
+# init
 
 _base = _build_base(config.PANEL_HOST, config.PANEL_PORT, config.PANEL_BASE_PATH)
 logger.info(f"Panel base URL: {_base}")
@@ -116,17 +114,23 @@ REGION_LABELS = {
     "fi": "🇫🇮 Finland",
     "nl": "🇳🇱 Netherlands",
 }
+ 
+EXTRA_INBOUNDS: list[int] = [
+    config.INBOUND_MOBILE_1,  
+    config.INBOUND_MOBILE_2, 
+    config.INBOUND_MOBILE_3,
+]
 
-logger.info(f"Inbound IDs - FI: {REGION_INBOUNDS['fi']}, NL: {REGION_INBOUNDS['nl']}")
+
+logger.info(f"Inbound IDs - FI: {REGION_INBOUNDS['fi']}, NL: {REGION_INBOUNDS['nl']}, Extra: {EXTRA_INBOUNDS}")
 
 
 def _sub_link(email: str) -> str:
-    """Ссылка на подписку — одна для всех регионов (единая панель)."""
+    """Ссылка на подписку , единая панель."""
     return f"{config.SUB_HOST}:{config.SUB_PORT}/sub/{email}"
 
 
 async def close_session() -> None:
-    """Закрыть сессию (вызывается при shutdown бота)."""
     await _panel.close()
 
 
@@ -137,17 +141,17 @@ async def create_client(
     region: str = "fi",
 ) -> dict | None:
     """
-    Создаёт клиента и привязывает его к desktop + mobile inbound одним запросом.
+    desktop + mobile для всех регионов + EXTRA_INBOUNDS.
     Возвращает {"client_id": ..., "email": ..., "sub_link": ...} или None при ошибке.
     """
     logger.info(f"create_client: email={email}, days={days}, limit={devices_limit}, region={region}")
 
     panel = _panels.get(region, _panel)
 
-    # Собираем все инбаунды со всех регионов
     all_inbound_ids = []
     for r_inbounds in REGION_INBOUNDS.values():
         all_inbound_ids.extend(list(r_inbounds))
+    all_inbound_ids.extend(EXTRA_INBOUNDS)
     client_id = str(uuid.uuid4())
     expire_ts = int((datetime.now(timezone.utc) + timedelta(days=days)).timestamp() * 1000)
 
@@ -218,9 +222,7 @@ async def update_client_ip_limit(
 ) -> bool:
     """Обновляет лимит IP-адресов клиента."""
     logger.info(f"update_client_ip_limit: email={email}, limit={limit}, region={region}")
-
     panel = _panels.get(region, _panel)
-
     payload = {
         "email": email,
         "totalGB": 0,
@@ -237,36 +239,28 @@ async def update_client_ip_limit(
     logger.info(f"update_client_ip_limit result: {result}")
     return result
 
-
 async def get_client_traffic(email: str, region: str = "fi") -> dict | None:
     """
     Возвращает трафик клиента:
     {"email": ..., "up": ..., "down": ..., "total": ..., "expiryTime": ...}
     """
     logger.info(f"get_client_traffic: email={email}, region={region}")
-
     panel = _panels.get(region, _panel)
     data = await panel.get(f"/panel/api/clients/traffic/{email}")
-
     if data and data.get("success"):
         logger.info(f"Traffic data: {json.dumps(data.get('obj'))[:200]}")
         return data.get("obj")
-
     logger.warning(f"get_client_traffic failed [{region}]: {data}")
     return None
-
-
+ 
+ 
 async def get_online_count(email: str, region: str = "fi") -> int | None:
-    """Возвращает количество активных IP-соединений клиента."""
     logger.info(f"get_online_count: email={email}, region={region}")
-
     panel = _panels.get(region, _panel)
     data = await panel.post(f"/panel/api/clients/ips/{email}")
-
     if not data or not data.get("success"):
         logger.warning(f"get_online_count failed [{region}]: {data}")
         return None
-
     obj = data.get("obj")
     if not obj:
         return 0
@@ -275,8 +269,8 @@ async def get_online_count(email: str, region: str = "fi") -> int | None:
     # формат "ip (timestamp)\nip (timestamp)\n..."
     ips = [line.strip() for line in str(obj).split("\n") if line.strip()]
     return len(ips)
-
-
+ 
+ 
 async def login():
     """Заглушка для обратной совместимости — Bearer Token не требует логина."""
     logger.info("login() called — no-op with Bearer Token auth")

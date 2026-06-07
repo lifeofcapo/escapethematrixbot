@@ -77,8 +77,8 @@ async def main():
     dp.include_router(referral.router)
     dp.include_router(payment.router)
     dp.include_router(support.router)
-    stop_event = asyncio.Event()     # Флаг для graceful shutdown
-    scheduler_task = asyncio.create_task(run_scheduler(bot)) # Планировщик уведомлений об истечении подписок
+    stop_event = asyncio.Event()   
+    scheduler_task = asyncio.create_task(run_scheduler(bot)) 
     internal_api_task = asyncio.create_task(start_internal_api(bot))
     loop = asyncio.get_running_loop() # (SIGINT = Ctrl+C, SIGTERM = systemd stop)
 
@@ -113,13 +113,13 @@ async def main():
         await scheduler_task
     except asyncio.CancelledError:
         pass
-    internal_api_task.cancel() # Останавливаем внутренний API
+    internal_api_task.cancel() 
     try:
         await internal_api_task
     except asyncio.CancelledError:
         pass
 
-    if hasattr(storage, "close"): # Закрываем соединения
+    if hasattr(storage, "close"):
         await storage.close()
     await close_pool()
     from services.xui import close_session as close_xui_session
