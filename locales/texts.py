@@ -90,7 +90,7 @@ TEXTS = {
             "💎 <b>Тарифы EscapeTheMatrix VPN</b>\n\n"
             "🌍 Сервер: {region}\n"
             "⚡️ Протокол: VLESS + Reality\n"
-            "📱 До 3 устройств одновременно\n"
+            "📱 До 4 устройств одновременно\n"
             "💰 Ваш баланс: <b>{balance} ₽</b>\n\n"
             "Выберите тариф:"
         ),
@@ -98,7 +98,7 @@ TEXTS = {
             "💎 <b>EscapeTheMatrix VPN Plans</b>\n\n"
             "🌍 Server: {region}\n"
             "⚡️ Protocol: VLESS + Reality\n"
-            "📱 Up to 3 devices simultaneously\n"
+            "📱 Up to 4 devices simultaneously\n"
             "💰 Your balance: <b>{balance} ₽</b>\n\n"
             "Choose a plan:"
         ),
