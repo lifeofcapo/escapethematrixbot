@@ -258,7 +258,7 @@ async def update_client_expiry(
     # перезаписываем только expiryTime и limitIp
     payload = {
         "email": email,
-        "id": client_data.get("id", client_id),
+        "id": client_data.get("uuid", client_id),
         "subId": client_data.get("subId", email),
         "flow": client_data.get("flow", "xtls-rprx-vision"),
         "totalGB": client_data.get("totalGB", 0),
@@ -297,7 +297,7 @@ async def update_client_ip_limit(
     panel = _panels.get(region, _panel)
     payload = {
         "email": email,
-        "id": client_data.get("id", client_id),
+        "id": client_data.get("uuid", client_id),
         "subId": client_data.get("subId", email),
         "flow": client_data.get("flow", "xtls-rprx-vision"),
         "totalGB": client_data.get("totalGB", 0),

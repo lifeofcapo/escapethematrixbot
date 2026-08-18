@@ -1,5 +1,5 @@
 -- Миграция: добавить trial_used в users и is_trial в subscriptions
--- Запускать: psql postgresql://vpnbot:...@localhost:5432/vpnbot -f migration.sql
+-- Запускать: psql postgresql://vpnbot:w67D0sgGWbOcOATNRknTDiU@localhost:5432/vpnbot -f migration.sql
 
 BEGIN;
 
