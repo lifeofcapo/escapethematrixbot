@@ -1,5 +1,5 @@
 # 3x-ui panel API wrapper
-# Compatible with 3x-ui v3.3.0+ (standalone client model)
+# Compatible with 3x-ui v3.6.0+ (standalone client model)
 # Docs: https://docs.sanaei.dev/docs/
 
 import json
@@ -102,7 +102,7 @@ _panels: dict[str, _PanelSession] = {
 }
 
 REGION_INBOUNDS: dict[str, tuple[int, int]] = {
-    "fi": (config.INBOUND_FI_DESKTOP, config.INBOUND_FI_MOBILE),
+    "fi": (config.INBOUND_FI_DESKTOP),
     "nl": (config.INBOUND_NL_DESKTOP, config.INBOUND_NL_MOBILE),
 }
 
@@ -352,10 +352,6 @@ async def get_online_count(email: str, region: str = "fi") -> int | None:
 
 
 async def reset_client_traffic(email: str, region: str = "fi") -> bool:
-    """
-    Сбрасывает счётчик трафика клиента.
-    Полезно после продления когда клиент был заблокирован по трафику.
-    """
     logger.info(f"reset_client_traffic: email={email}, region={region}")
     panel = _panels.get(region, _panel)
     data = await panel.post(f"/panel/api/clients/resetTraffic/{email}")
@@ -365,9 +361,7 @@ async def reset_client_traffic(email: str, region: str = "fi") -> bool:
 
 
 async def delete_client(email: str, region: str = "fi") -> bool:
-    """
-    Удаляет клиента со всех inbound-ов.
-    """
+    """Удаляет клиента со всех inbound-ов."""
     logger.info(f"delete_client: email={email}, region={region}")
     panel = _panels.get(region, _panel)
     data = await panel.post(f"/panel/api/clients/del/{email}")
