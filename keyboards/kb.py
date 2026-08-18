@@ -56,22 +56,52 @@ def main_menu(lang: str) -> InlineKeyboardMarkup:
     ])
 
 
-def profile_keyboard(lang: str) -> InlineKeyboardMarkup:
+def profile_keyboard(
+    lang: str,
+    has_sub: bool = False,
+    trial_used: bool = False,
+) -> "InlineKeyboardMarkup":
     mini_app_label = "🌐 Mini App"
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text=mini_app_label,
-            web_app=WebAppInfo(url=config.MINI_APP_URL),
-        )],
-        [InlineKeyboardButton(
-            text=t("btn_setup_guide", lang),
-            callback_data="setup:choose_platform",
-        )],
-        [InlineKeyboardButton(text=t("btn_devices", lang),     callback_data="menu:devices")],
-        [InlineKeyboardButton(text=t("btn_referral", lang),    callback_data="menu:referral")],
-        [InlineKeyboardButton(text=t("btn_change_lang", lang), callback_data="menu:change_lang")],
-        [InlineKeyboardButton(text=t("btn_back", lang),        callback_data="menu:back")],
-    ])
+    rows = []
+ 
+    rows.append([InlineKeyboardButton(
+        text=mini_app_label,
+        web_app=WebAppInfo(url=config.MINI_APP_URL),
+    )])
+ 
+    # Кнопка "Продлить подписку" — только если есть активная подписка
+    if has_sub:
+        renew_label = "🔄 Продлить подписку" if lang == "ru" else "🔄 Renew subscription"
+        rows.append([InlineKeyboardButton(
+            text=renew_label,
+            callback_data="profile:renew",
+        )])
+ 
+    # Кнопка "Пробный период" — только если НЕ использован
+    if not trial_used:
+        trial_label = "🎁 3 дня бесплатно" if lang == "ru" else "🎁 3 days free"
+        rows.append([InlineKeyboardButton(
+            text=trial_label,
+            callback_data="trial:start",
+        )])
+ 
+    rows.append([InlineKeyboardButton(
+        text=t("btn_setup_guide", lang),
+        callback_data="setup:choose_platform",
+    )])
+    rows.append([InlineKeyboardButton(
+        text=t("btn_referral", lang),
+        callback_data="menu:referral",
+    )])
+    rows.append([InlineKeyboardButton(
+        text=t("btn_change_lang", lang),
+        callback_data="menu:change_lang",
+    )])
+    rows.append([InlineKeyboardButton(
+        text=t("btn_back", lang),
+        callback_data="menu:back",
+    )])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def setup_platform_keyboard(lang: str) -> InlineKeyboardMarkup:
@@ -124,8 +154,14 @@ def region_keyboard(lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def plans_keyboard(lang: str, region: str = "fi") -> InlineKeyboardMarkup:
+def plans_keyboard(lang: str, region: str = "fi", show_trial: bool = True) -> "InlineKeyboardMarkup":
     rows = []
+    if show_trial:
+        trial_label = "🎁 3 дня бесплатно (пробный период)" if lang == "ru" else "🎁 3 days free (trial)"
+        rows.append([InlineKeyboardButton(
+            text=trial_label,
+            callback_data="trial:start",
+        )])
     for plan_id, plan in config.PLANS.items():
         label = plan[f"label_{lang}"]
         price = plan["price_rub"]
@@ -137,7 +173,10 @@ def plans_keyboard(lang: str, region: str = "fi") -> InlineKeyboardMarkup:
         text=t("extra_devices_btn", lang),
         callback_data="buy:extra_devices",
     )])
-    rows.append([InlineKeyboardButton(text=t("btn_back", lang), callback_data="menu:back")])
+    rows.append([InlineKeyboardButton(
+        text=t("btn_back", lang),
+        callback_data="menu:back",
+    )])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 

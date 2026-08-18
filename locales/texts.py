@@ -108,8 +108,8 @@ TEXTS = {
         "en": "{label} — {price} ₽",
     },
     "extra_devices_btn": {
-        "ru": "➕ Доп. 3 устройства — 50 ₽",
-        "en": "➕ Extra 3 devices — 50 ₽",
+        "ru": "➕ Доп. 3 устройства — 60 ₽",
+        "en": "➕ Extra 3 devices — 60 ₽",
     },
     "already_max_devices": {
         "ru": "✅ У вас уже максимальное количество устройств.",
@@ -175,6 +175,7 @@ TEXTS = {
     "btn_devices": {"ru": "📱 Устройства", "en": "📱 Devices"},
     "btn_yookassa":  {"ru": "💳 Банковская карта / СБП", "en": "💳 Bank card / FSP"},
     "btn_crypto":    {"ru": "₿ Криптовалюта",  "en": "₿ Crypto"},
+    "btn_promo":     {"ru": "🎟 Промокод",      "en": "🎟 Promo code"},
     "choose_crypto": {
         "ru": "🪙 Выберите криптовалюту:",
         "en": "🪙 Choose cryptocurrency:",
@@ -231,6 +232,73 @@ TEXTS = {
         "ru": "✅ Баланс пополнен на {amount} ₽. Текущий баланс: {balance} ₽",
         "en": "✅ Balance topped up by {amount} ₽. Current balance: {balance} ₽",
     },
+
+    "trial_btn": {
+        "ru": "🎁 3 дня бесплатно (пробный период)",
+        "en": "🎁 3 days free (trial)",
+    },
+    "trial_already_used": {
+        "ru": "❌ Вы уже использовали пробный период.",
+        "en": "❌ You have already used the trial period.",
+    },
+    "trial_has_active_sub": {
+        "ru": "❌ Пробный период недоступен — у вас уже есть активная подписка.",
+        "en": "❌ Trial is unavailable — you already have an active subscription.",
+    },
+    "trial_success": {
+        "ru": (
+            "🎁 <b>Пробный период активирован на {days} дн.!</b>\n\n"
+            "🌍 Регион: {region_label}\n"
+            "🔗 Ваша ссылка подписки:\n"
+            "<code>{sub_link}</code>\n\n"
+            "📱 Вставьте ссылку в приложение (Happ, FlClashX, NekoBox и др.)"
+        ),
+        "en": (
+            "🎁 <b>Trial period activated for {days} day(s)!</b>\n\n"
+            "🌍 Region: {region_label}\n"
+            "🔗 Your subscription link:\n"
+            "<code>{sub_link}</code>\n\n"
+            "📱 Paste the link into your VPN app (Happ, FlClashX, NekoBox, etc.)"
+        ),
+    },
+
+    "promo_enter_prompt": {
+        "ru": "🎟 Введите промокод:",
+        "en": "🎟 Enter promo code:",
+    },
+    "promo_not_found": {
+        "ru": "❌ Промокод не найден, неактивен или истёк.",
+        "en": "❌ Promo code not found, inactive, or expired.",
+    },
+    "promo_already_used": {
+        "ru": "❌ Вы уже использовали этот промокод.",
+        "en": "❌ You have already used this promo code.",
+    },
+    "promo_success_fixed": {
+        "ru": "✅ Промокод применён! На баланс начислено {amount} ₽. Текущий баланс: {balance} ₽",
+        "en": "✅ Promo code applied! {amount} ₽ credited to your balance. Current balance: {balance} ₽",
+    },
+    "promo_percent_pending": {
+        "ru": (
+            "✅ Промокод принят: бонус +{percent}% к следующему пополнению баланса.\n\n"
+            "Выберите способ пополнения, чтобы получить бонус:"
+        ),
+        "en": (
+            "✅ Promo code accepted: +{percent}% bonus on your next top-up.\n\n"
+            "Choose a top-up method to receive the bonus:"
+        ),
+    },
+    "promo_percent_applied": {
+        "ru": (
+            "✅ Баланс пополнен на {amount} ₽ + бонус по промокоду {bonus} ₽.\n"
+            "Текущий баланс: {balance} ₽"
+        ),
+        "en": (
+            "✅ Balance topped up by {amount} ₽ + {bonus} ₽ promo bonus.\n"
+            "Current balance: {balance} ₽"
+        ),
+    },
+
     "support_header": {
         "ru": (
             "🆘 <b>Поддержка EscapeTheMatrix VPN</b>\n\n"

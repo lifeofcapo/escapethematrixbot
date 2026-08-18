@@ -93,7 +93,10 @@ async def show_profile(callback: CallbackQuery):
         return
     lang = user.get("language", "ru")
     text = await _build_profile_text(user, lang)
-    kb = profile_keyboard(lang)
+    subs = await get_active_subscriptions(user["id"])
+    has_sub = bool(subs)
+    trial_used = bool(user.get("trial_used", False))
+    kb = profile_keyboard(lang, has_sub=has_sub, trial_used=trial_used)
     await _send_profile_photo(callback, text, kb)
     await callback.answer()
 
@@ -220,4 +223,39 @@ async def setup_platform_detail(callback: CallbackQuery):
                 disable_web_page_preview=True,
             )
 
+    await callback.answer()
+
+@router.callback_query(F.data == "profile:renew")
+async def profile_renew(callback: CallbackQuery):
+    """
+    Кнопка "Продлить подписку" в профиле.
+    Работает только если есть активная подписка.
+    Перенаправляет на экран выбора тарифа (как обычная покупка).
+    """
+    from database.db import get_active_subscription, get_balance
+    from keyboards.kb import plans_keyboard, all_regions_label
+    from locales.texts import t
+    from handlers.payment import _edit_or_answer, PHOTOS
+    from aiogram.types import FSInputFile
+    user = await get_user(callback.from_user.id)
+    if not user:
+        await callback.answer()
+        return
+    lang = user.get("language", "ru")
+    sub = await get_active_subscription(callback.from_user.id)
+    if not sub:
+        msg = "❌ У вас нет активной подписки." if lang == "ru" else "❌ No active subscription."
+        await callback.answer(msg, show_alert=True)
+        return
+
+    balance = await get_balance(callback.from_user.id)
+    region = sub.get("region", "fi")
+    trial_used = bool(user.get("trial_used", False))
+    text = t("plans_header", lang, balance=f"{balance:.2f}", region=all_regions_label(lang))
+    await _edit_or_answer(
+        callback,
+        text,
+        plans_keyboard(lang, region, show_trial=not trial_used),
+        photo=FSInputFile(PHOTOS["plans"]),
+    )
     await callback.answer()

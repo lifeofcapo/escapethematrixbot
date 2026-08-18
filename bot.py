@@ -11,7 +11,7 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from config import config
 from database.db import create_pool, init_db, close_pool
 from middlewares.channel_check import ChannelCheckMiddleware
-from handlers import start, profile, payment, support, referral, broadcast
+from handlers import start, profile, payment, support, referral, broadcast, trial
 from services.scheduler import run_scheduler
 from services.internal_api import start_internal_api
 
@@ -70,13 +70,14 @@ async def main():
     dp.message.middleware(ChannelCheckMiddleware())
     dp.callback_query.middleware(ChannelCheckMiddleware())
 
-    # broadcast первым до channel_check, чтобы фото от админов не блокировались
+    # broadcast первым до channel_check, чтобы фото для уведомлений не блокировались
     dp.include_router(broadcast.router)
     dp.include_router(start.router)
     dp.include_router(profile.router)
     dp.include_router(referral.router)
     dp.include_router(payment.router)
     dp.include_router(support.router)
+    dp.include_router(trial.router)
     stop_event = asyncio.Event()   
     scheduler_task = asyncio.create_task(run_scheduler(bot)) 
     internal_api_task = asyncio.create_task(start_internal_api(bot))

@@ -34,7 +34,6 @@ async def close_pool() -> None:
 
 
 async def init_db() -> None:
-    """Создать таблицы если не существуют."""
     async with get_pool().acquire() as conn:
         await conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -45,7 +44,8 @@ async def init_db() -> None:
             profile_key     TEXT          UNIQUE NOT NULL,
             balance         NUMERIC(12,2) NOT NULL DEFAULT 0,
             created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-            referred_by     BIGINT
+            referred_by     BIGINT,
+            trial_used      BOOLEAN       NOT NULL DEFAULT FALSE
         );
 
         CREATE TABLE IF NOT EXISTS subscriptions (
@@ -59,7 +59,8 @@ async def init_db() -> None:
             devices_limit   INTEGER     NOT NULL DEFAULT 4,
             started_at      TIMESTAMPTZ,
             expires_at      TIMESTAMPTZ,
-            is_active       BOOLEAN     NOT NULL DEFAULT TRUE
+            is_active       BOOLEAN     NOT NULL DEFAULT TRUE,
+            is_trial        BOOLEAN     NOT NULL DEFAULT FALSE
         );
 
         CREATE INDEX IF NOT EXISTS idx_subscriptions_user_active
@@ -97,6 +98,7 @@ async def init_db() -> None:
             method      TEXT        NOT NULL,
             created_at  TIMESTAMPTZ DEFAULT NOW()
         );
+
         CREATE TABLE IF NOT EXISTS support_tickets (
             id          BIGSERIAL   PRIMARY KEY,
             user_id     BIGINT      NOT NULL REFERENCES users(id),
@@ -104,9 +106,7 @@ async def init_db() -> None:
             status      TEXT        NOT NULL DEFAULT 'open',
             created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
-                           
-        ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS region TEXT NOT NULL DEFAULT 'fi';
-                           
+
         CREATE INDEX IF NOT EXISTS idx_subscriptions_expires_active
             ON subscriptions(is_active, expires_at);
         CREATE INDEX IF NOT EXISTS idx_payments_user_id
@@ -171,7 +171,6 @@ async def get_balance(user_id: int) -> float:
 
 
 async def count_referrals(user_id: int) -> int:
-    """Количество пользователей, которых пригласил данный юзер."""
     async with get_pool().acquire() as conn:
         val = await conn.fetchval(
             "SELECT COUNT(*) FROM users WHERE referred_by = $1", user_id
@@ -201,18 +200,19 @@ async def get_active_subscriptions(user_id: int) -> list[dict]:
 
 async def create_subscription(user_id: int, xui_client_id: str, xui_email: str,
                                sub_link: str, plan: str, days: int,
-                               devices_limit: int = 4, region: str = "fi") -> int:
+                               devices_limit: int = 4, region: str = "fi",
+                               is_trial: bool = False) -> int:
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=days)
     async with get_pool().acquire() as conn:
         row = await conn.fetchrow("""
             INSERT INTO subscriptions
                 (user_id, xui_client_id, xui_email, sub_link, plan,
-                 region, devices_limit, started_at, expires_at, is_active)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
+                 region, devices_limit, started_at, expires_at, is_active, is_trial)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10)
             RETURNING id
         """, user_id, xui_client_id, xui_email, sub_link, plan,
-             region, devices_limit, now, expires)
+             region, devices_limit, now, expires, is_trial)
         return row["id"]
 
 
@@ -223,7 +223,6 @@ async def extend_subscription(sub_id: int, extra_days: int) -> None:
             SET expires_at = GREATEST(expires_at, NOW()) + ($1 || ' days')::INTERVAL
             WHERE id = $2
         """, str(extra_days), sub_id)
-
 
 async def update_devices_limit(sub_id: int, new_limit: int) -> None:
     async with get_pool().acquire() as conn:
@@ -271,4 +270,18 @@ async def clear_expiry_notifications(sub_id: int) -> None:
     async with get_pool().acquire() as conn:
         await conn.execute(
             "DELETE FROM expiry_notifications WHERE sub_id = $1", sub_id
+        )
+
+async def is_trial_used(user_id: int) -> bool:
+    async with get_pool().acquire() as conn:
+        val = await conn.fetchval(
+            "SELECT trial_used FROM users WHERE id = $1", user_id
+        )
+        return bool(val)
+ 
+ 
+async def mark_trial_used(user_id: int) -> None:
+    async with get_pool().acquire() as conn:
+        await conn.execute(
+            "UPDATE users SET trial_used = TRUE WHERE id = $1", user_id
         )

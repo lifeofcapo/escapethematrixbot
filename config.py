@@ -30,17 +30,19 @@ class Config:
     INBOUND_MOBILE_1: int = int(os.getenv("INBOUND_MOBILE_1", "5"))
     INBOUND_MOBILE_2: int = int(os.getenv("INBOUND_MOBILE_2", "6"))
     INBOUND_MOBILE_3: int = int(os.getenv("INBOUND_MOBILE_3", "7"))
-
+    INBOUND_MOBILE_4: int = int(os.getenv("INBOUND_MOBILE_4", "8"))
+    
+    TRIAL_DAYS: int = 3
     MAX_DEVICES: int = 4
     EXTRA_DEVICES: int = 3      
-    EXTRA_DEVICES_PRICE: int = 50  
+    EXTRA_DEVICES_PRICE: int = 60  
 
     REFERRAL_BONUS_PERCENT: float = 25.0
 
     PLANS: dict = field(default_factory=lambda: {
-        "1m": {"days": 30,  "price_rub": 100, "label_ru": "1 месяц",   "label_en": "1 month"},
-        "3m": {"days": 90,  "price_rub": 290, "label_ru": "3 месяца",  "label_en": "3 months"},
-        "6m": {"days": 180, "price_rub": 580, "label_ru": "6 месяцев", "label_en": "6 months"},
+        "1m": {"days": 30,  "price_rub": 125, "label_ru": "1 месяц",   "label_en": "1 month"},
+        "3m": {"days": 90,  "price_rub": 360, "label_ru": "3 месяца",  "label_en": "3 months"},
+        "6m": {"days": 180, "price_rub": 700, "label_ru": "6 месяцев", "label_en": "6 months"},
     })
 
     YOOKASSA_SHOP_ID: str = os.getenv("YOOKASSA_SHOP_ID", "")

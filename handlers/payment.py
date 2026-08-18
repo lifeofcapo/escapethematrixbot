@@ -10,7 +10,7 @@ from config import config
 from database.db import (
     get_user, get_active_subscription, create_payment, get_payment_by_provider_id,
     mark_payment_paid, create_subscription, extend_subscription,
-    update_balance, update_devices_limit, get_balance, clear_expiry_notifications,
+    update_balance, update_devices_limit, get_balance, clear_expiry_notifications
 )
 from keyboards.kb import (
     plans_keyboard, pay_now_keyboard, back_keyboard,
@@ -104,11 +104,13 @@ async def show_plans(callback: CallbackQuery):
     region_name = region_info[f"name_{lang}"]
     balance = await get_balance(callback.from_user.id)
 
+    trial_used = bool(user.get("trial_used", False)) if user else True
+    balance = await get_balance(callback.from_user.id)
     text = t("plans_header", lang, balance=f"{balance:.2f}", region=all_regions_label(lang))
     await _edit_or_answer(
         callback,
         text,
-        plans_keyboard(lang, region),
+        plans_keyboard(lang, region, show_trial=not trial_used),
         photo=FSInputFile(PHOTOS["plans"]),
     )
     await callback.answer()
@@ -123,11 +125,13 @@ async def show_plans_direct(callback: CallbackQuery):
     flag = region_info["flag"]
     region_name = region_info[f"name_{lang}"]
 
+    trial_used = bool(user.get("trial_used", False)) if user else True
+    balance = await get_balance(callback.from_user.id)
     text = t("plans_header", lang, balance=f"{balance:.2f}", region=all_regions_label(lang))
     await _edit_or_answer(
         callback,
         text,
-        plans_keyboard(lang, "fi"),
+        plans_keyboard(lang, "fi", show_trial=not trial_used),
         photo=FSInputFile(PHOTOS["plans"]),
     )
     await callback.answer()

@@ -239,9 +239,13 @@ async def cmd_plans(message: Message):
         return
     lang = user.get("language", "ru")
     balance = await get_balance(message.from_user.id)
+    trial_used = bool(user.get("trial_used", False))
     text = t("plans_header", lang, balance=f"{balance:.2f}", region=all_regions_label(lang))
-    await message.answer(text, reply_markup=plans_keyboard(lang, "fi"), parse_mode="HTML")
-
+    await message.answer(
+        text,
+        reply_markup=plans_keyboard(lang, "fi", show_trial=not trial_used),
+        parse_mode="HTML",
+    )
 
 @router.message(Command("referral"))
 async def cmd_referral(message: Message, bot: Bot):
