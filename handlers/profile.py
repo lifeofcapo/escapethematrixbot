@@ -62,6 +62,7 @@ async def _build_profile_text(user: dict, lang: str) -> str:
             expires = format_datetime(sub["expires_at"], lang)
             d_left = days_left(sub["expires_at"])
             sub_region_label = region_label(sub.get("region", "fi"), lang)
+            clash_link = sub["sub_link"].replace("/sub/", "/clash/") if sub.get("sub_link") else ""
             sub_lines.append(
                 t(
                     "sub_item", lang,
@@ -70,6 +71,7 @@ async def _build_profile_text(user: dict, lang: str) -> str:
                     days=d_left,
                     devices=sub["devices_limit"],
                     link=sub["sub_link"],
+                    clash_link=clash_link,
                 )
             )
         sub_info = "\n\n".join(sub_lines)

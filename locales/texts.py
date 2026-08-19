@@ -392,8 +392,8 @@ TEXTS = {
     "btn_setup_guide":  {"ru": "📲 Как подключиться", "en": "📲 Setup guide"},
 
     "sub_item": {
-        "ru": "🌍 {region}\n📅 {expires} ({days} дн.)\n📱 Устройств: {devices}\n🔗 <code>{link}</code>",
-        "en": "🌍 {region}\n📅 {expires} ({days} days)\n📱 Devices: {devices}\n🔗 <code>{link}</code>",
+        "ru": "🌍 {region}\n📅 {expires} ({days} дн.)\n📱 Устройств: {devices}\n\n🔗 <b>Ссылка подписки:</b>\n<code>{link}</code>\n\n🟣 <b>Clash / Mihomo:</b>\n<code>{clash_link}</code>",
+        "en": "🌍 {region}\n📅 {expires} ({days} days)\n📱 Devices: {devices}\n\n🔗 <b>Subscription link:</b>\n<code>{link}</code>\n\n🟣 <b>Clash / Mihomo:</b>\n<code>{clash_link}</code>",
     },
     "devices_info": {
         "ru": "📱 <b>Устройства</b>\n\nТекущий лимит: <b>{current}</b>\nМаксимум: <b>{maximum}</b>",
