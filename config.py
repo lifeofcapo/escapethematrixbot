@@ -25,7 +25,6 @@ class Config:
     SUB_PORT: int = 2096
     INBOUND_FI_DESKTOP: int = int(os.getenv("INBOUND_FI_DESKTOP", "1"))
     INBOUND_NL_DESKTOP: int = int(os.getenv("INBOUND_NL_DESKTOP", "3"))
-    INBOUND_NL_MOBILE:  int = int(os.getenv("INBOUND_NL_MOBILE",  "4"))
     INBOUND_MOBILE_1: int = int(os.getenv("INBOUND_MOBILE_1", "5"))
     INBOUND_MOBILE_2: int = int(os.getenv("INBOUND_MOBILE_2", "6"))
     INBOUND_MOBILE_3: int = int(os.getenv("INBOUND_MOBILE_3", "7"))

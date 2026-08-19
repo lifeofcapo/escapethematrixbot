@@ -101,9 +101,9 @@ _panels: dict[str, _PanelSession] = {
     "nl": _panel,
 }
 
-REGION_INBOUNDS: dict[str, tuple[int, int]] = {
-    "fi": (config.INBOUND_FI_DESKTOP),
-    "nl": (config.INBOUND_NL_DESKTOP, config.INBOUND_NL_MOBILE),
+REGION_INBOUNDS: dict[str, list[int]] = {
+    "fi": [config.INBOUND_FI_DESKTOP],
+    "nl": [config.INBOUND_NL_DESKTOP],
 }
 
 REGION_LABELS = {
@@ -126,10 +126,9 @@ logger.info(
 
 
 def _all_inbound_ids() -> list[int]:
-    """Список всех inbound ID для нового клиента."""
     ids: list[int] = []
-    for desktop, mobile in REGION_INBOUNDS.values():
-        ids.extend([desktop, mobile])
+    for inbounds in REGION_INBOUNDS.values():
+        ids.extend(inbounds)
     ids.extend(EXTRA_INBOUNDS)
     return ids
 
