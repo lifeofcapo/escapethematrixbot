@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 import os
 from dotenv import load_dotenv
- 
+
 load_dotenv()
 @dataclass
 class Config:
@@ -13,27 +13,32 @@ class Config:
     REQUIRED_CHANNEL_ID: str = os.getenv("REQUIRED_CHANNEL_ID", "@EscapeTheMatrixVPN")
     REQUIRED_CHANNEL_URL: str = os.getenv("REQUIRED_CHANNEL_URL", "https://t.me/EscapeTheMatrixVPN")
     SITE_URL: str = "https://www.escapethematrix.to"
-    FAQ_URL: str = os.getenv("FAQ_URL", "https://telegra.ph/VPN-FAQ-04-12")  
+    FAQ_URL: str = os.getenv("FAQ_URL", "https://telegra.ph/VPN-FAQ-04-12")
 
-    PANEL_HOST: str = os.getenv("PANEL_HOST", "https://vpn.escapethematrix.to")
-    PANEL_PORT: int = int(os.getenv("PANEL_PORT", "2053"))
+    PANEL_HOST: str = os.getenv("PANEL_HOST", "https://pl.escapethematrix.to")
+    PANEL_PORT: int = int(os.getenv("PANEL_PORT", "29286"))
     PANEL_USER: str = os.getenv("PANEL_USER", "")
     PANEL_PASS: str = os.getenv("PANEL_PASS", "")
-    PANEL_BASE_PATH: str = os.getenv("PANEL_BASE_PATH", "")
+    PANEL_BASE_PATH: str = os.getenv("PANEL_BASE_PATH", "gm7NAKsytzLBGzHxqi")
     PANEL_BASE_URL: str = f"{PANEL_HOST}:{PANEL_PORT}"
-    SUB_HOST: str = "https://vpn.escapethematrix.to"
-    SUB_PORT: int = 2096
-    INBOUND_FI_DESKTOP: int = int(os.getenv("INBOUND_FI_DESKTOP", "1"))
-    INBOUND_NL_DESKTOP: int = int(os.getenv("INBOUND_NL_DESKTOP", "3"))
-    INBOUND_MOBILE_1: int = int(os.getenv("INBOUND_MOBILE_1", "5"))
-    INBOUND_MOBILE_2: int = int(os.getenv("INBOUND_MOBILE_2", "6"))
-    INBOUND_MOBILE_3: int = int(os.getenv("INBOUND_MOBILE_3", "7"))
-    INBOUND_MOBILE_4: int = int(os.getenv("INBOUND_MOBILE_4", "8"))
-    
+    SUB_HOST: str = os.getenv("SUB_HOST", "https://cdn.escapethematrix.to")
+
+    # Новая панель 3x-ui 3.9.0: один клиент привязывается сразу ко всем
+    # 9 inbound'ам. Деление на "региональные"/"мобильные" убрано.
+    INBOUND_1: int = int(os.getenv("INBOUND_1", "2"))
+    INBOUND_2: int = int(os.getenv("INBOUND_2", "3"))
+    INBOUND_3: int = int(os.getenv("INBOUND_3", "4"))
+    INBOUND_4: int = int(os.getenv("INBOUND_4", "5"))
+    INBOUND_5: int = int(os.getenv("INBOUND_5", "6"))
+    INBOUND_6: int = int(os.getenv("INBOUND_6", "7"))
+    INBOUND_7: int = int(os.getenv("INBOUND_7", "8"))
+    INBOUND_8: int = int(os.getenv("INBOUND_8", "9"))
+    INBOUND_9: int = int(os.getenv("INBOUND_9", "10"))
+
     TRIAL_DAYS: int = 3
     MAX_DEVICES: int = 4
-    EXTRA_DEVICES: int = 3      
-    EXTRA_DEVICES_PRICE: int = 60  
+    EXTRA_DEVICES: int = 3
+    EXTRA_DEVICES_PRICE: int = 60
 
     REFERRAL_BONUS_PERCENT: float = 25.0
 
@@ -45,7 +50,7 @@ class Config:
 
     YOOKASSA_SHOP_ID: str = os.getenv("YOOKASSA_SHOP_ID", "")
     YOOKASSA_SECRET:  str = os.getenv("YOOKASSA_SECRET",  "")
- 
+
     CRYPTOBOT_TOKEN: str = os.getenv("CRYPTOBOT_TOKEN", "")
     CRYPTOBOT_API_URL: str = "https://pay.crypt.bot/api"
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
@@ -55,7 +60,7 @@ class Config:
     MINI_APP_URL: str = os.getenv("MINI_APP_URL", "https://www.escapethematrix.to/miniapp")
     INTERNAL_SECRET: str = os.getenv("INTERNAL_SECRET", "")
     INTERNAL_API_PORT: int = int(os.getenv("INTERNAL_API_PORT", "8000"))
-    
+
     USE_WEBHOOK: bool = os.getenv("USE_WEBHOOK", "false").lower() == "true"
     WEBHOOK_HOST: str = os.getenv("WEBHOOK_HOST", "https://escapethematrix.to")
     WEBHOOK_PATH: str = "/webhook/bot"

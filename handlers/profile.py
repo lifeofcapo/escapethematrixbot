@@ -229,11 +229,6 @@ async def setup_platform_detail(callback: CallbackQuery):
 
 @router.callback_query(F.data == "profile:renew")
 async def profile_renew(callback: CallbackQuery):
-    """
-    Кнопка "Продлить подписку" в профиле.
-    Работает только если есть активная подписка.
-    Перенаправляет на экран выбора тарифа (как обычная покупка).
-    """
     from database.db import get_active_subscription, get_balance
     from keyboards.kb import plans_keyboard, all_regions_label
     from locales.texts import t

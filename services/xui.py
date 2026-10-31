@@ -1,5 +1,5 @@
 # 3x-ui panel API wrapper
-# Compatible with 3x-ui v3.6.0+ (standalone client model)
+# Compatible with 3x-ui v3.9.0 (multi-protocol client model, 9 inbounds)
 # Docs: https://docs.sanaei.dev/docs/
 
 import json
@@ -96,46 +96,44 @@ logger.info(f"Panel base URL: {_base}")
 
 _panel = _PanelSession(_base, config.PANEL_API_TOKEN, "MASTER")
 
+# Регион "fi" временно указывает на новый сервер pl.escapethematrix.to.
+# Это чисто косметическая метка в БД/UI — все запросы реально уходят
+# на единственную сейчас рабочую панель (_panel).
 _panels: dict[str, _PanelSession] = {
     "fi": _panel,
     "nl": _panel,
 }
 
-REGION_INBOUNDS: dict[str, list[int]] = {
-    "fi": [config.INBOUND_FI_DESKTOP],
-    "nl": [config.INBOUND_NL_DESKTOP],
-}
-
-REGION_LABELS = {
-    "fi": "🇫🇮 Finland",
-    "nl": "🇳🇱 Netherlands",
-}
-
-EXTRA_INBOUNDS: list[int] = [
-    config.INBOUND_MOBILE_1,
-    config.INBOUND_MOBILE_2,
-    config.INBOUND_MOBILE_3,
-    config.INBOUND_MOBILE_4,
+# Новая панель 3x-ui 3.9.0: один клиент привязывается сразу ко ВСЕМ
+# 9 inbound'ам (id 2..10 на новом сервере) — нет больше деления на
+# "региональные" + "мобильные" inbound'ы, это пока убрано как лишнее.
+ALL_INBOUND_IDS: list[int] = [
+    config.INBOUND_1,
+    config.INBOUND_2,
+    config.INBOUND_3,
+    config.INBOUND_4,
+    config.INBOUND_5,
+    config.INBOUND_6,
+    config.INBOUND_7,
+    config.INBOUND_8,
+    config.INBOUND_9,
 ]
 
-logger.info(
-    f"Inbound IDs — FI: {REGION_INBOUNDS['fi']}, "
-    f"NL: {REGION_INBOUNDS['nl']}, "
-    f"Extra: {EXTRA_INBOUNDS}"
-)
+REGION_LABELS = {
+    "fi": "🇵🇱 Poland",
+    "nl": "🇵🇱 Poland",
+}
+
+logger.info(f"Inbound IDs (all): {ALL_INBOUND_IDS}")
 
 
 def _all_inbound_ids() -> list[int]:
-    ids: list[int] = []
-    for inbounds in REGION_INBOUNDS.values():
-        ids.extend(inbounds)
-    ids.extend(EXTRA_INBOUNDS)
-    return ids
+    return ALL_INBOUND_IDS
 
 
 def _sub_link(email: str) -> str:
     """Ссылка на подписку клиента."""
-    return f"{config.SUB_HOST}:{config.SUB_PORT}/sub/{email}"
+    return f"{config.SUB_HOST}/sub/{email}"
 
 
 async def close_session() -> None:
@@ -149,10 +147,12 @@ async def create_client(
     region: str = "fi",
 ) -> dict | None:
     """
-    Создание клиента через новый API /panel/api/clients/add.
-    
-    В v3.3+ клиент — самостоятельная сущность, прикрепляемая к inbound-ам
-    через inboundIds. subId приравниваем к email для удобства.
+    Создание клиента через API /panel/api/clients/add.
+
+    На 3x-ui 3.9.0 клиент — мульти-протокольная сущность, привязываемая
+    ко всем 9 inbound'ам сразу через inboundIds. Протокол-специфичные
+    секреты (password, privateKey/publicKey для WG-подобных inbound'ов,
+    auth) панель генерирует сама на своей стороне — явно их не передаём.
 
     Возвращает {"client_id": ..., "email": ..., "sub_link": ...} или None.
     """
@@ -173,9 +173,6 @@ async def create_client(
         f"inbounds={all_inbound_ids}"
     )
 
-    # v3.3+ формат: { "client": {...}, "inboundIds": [...] }
-    # Секреты (UUID для VLESS) сервер генерирует сам если не переданы,
-    # но мы передаём явно чтобы сохранить в БД.
     payload = {
         "client": {
             "id": client_id,           # UUID для VLESS
@@ -207,7 +204,7 @@ async def get_client(email: str, region: str = "fi") -> dict | None:
     """
     Получить полные данные клиента по email.
     Возвращает {"client": {...}, "inboundIds": [...], "externalLinks": [...]} или None.
-    
+
     Используется перед update чтобы не затирать поля (сервер делает полную замену).
     """
     logger.info(f"get_client: email={email}, region={region}")
@@ -232,8 +229,20 @@ async def update_client_expiry(
     """
     Продлевает срок действия клиента.
 
-    ВАЖНО: v3.3+ API /clients/update/:email делает полную замену записи,
+    ВАЖНО: API /clients/update/:email делает полную замену записи,
     поэтому сначала получаем текущие данные и патчим только expiryTime.
+
+    ВАЖНО №2 (фикс бага потери inbound'ов при продлении): без явного
+    inboundIds в payload панель на update может сузить список inbound'ов,
+    к которым привязан клиент. Поэтому обязательно передаём ПОЛНЫЙ
+    список inbound'ов — берём его из самого ответа get_client (ground
+    truth от панели), и только если панель его не вернула — fallback
+    на весь список _all_inbound_ids().
+
+    ВАЖНО №3: сохраняем все протокол-специфичные секреты клиента
+    (password, privateKey, publicKey, auth, uuid), которые панель
+    сгенерировала при создании — иначе update их затрёт/пересоздаст
+    и клиент потеряет доступ по WG-подобным/Trojan/Shadowsocks inbound'ам.
     """
     logger.info(
         f"update_client_expiry: email={email}, extra_days={extra_days}, "
@@ -246,31 +255,69 @@ async def update_client_expiry(
         client_data = current.get("client", {})
         # Берём реальный expiryTime с панели, если отличается
         real_expire = client_data.get("expiryTime", current_expire_ms)
+        current_inbound_ids = current.get("inboundIds")
     else:
         client_data = {}
         real_expire = current_expire_ms
+        current_inbound_ids = None
 
     new_expire = real_expire + extra_days * 86_400_000
     panel = _panels.get(region, _panel)
 
-    # Формируем payload: берём все известные поля из текущего клиента,
-    # перезаписываем только expiryTime и limitIp
-    payload = {
-        "email": email,
-        "id": client_data.get("uuid", client_id),
-        "subId": client_data.get("subId", email),
-        "flow": client_data.get("flow", "xtls-rprx-vision"),
-        "totalGB": client_data.get("totalGB", 0),
-        "expiryTime": new_expire,
-        "enable": client_data.get("enable", True),
-        "tgId": client_data.get("tgId", 0),
-        "limitIp": client_data.get("limitIp", devices_limit),
-        "comment": client_data.get("comment", ""),
-    }
+    # Формируем payload: берём ВСЕ известные поля из текущего клиента
+    # (включая протокол-специфичные секреты), перезаписываем только
+    # expiryTime. Поля, которых нет у клиента, просто не включаем —
+    # не подставляем за них дефолты, чтобы не затереть что-то важное
+    # пустым значением.
+    client_payload = dict(client_data)  # полная копия текущих данных
+    client_payload["email"] = email
+    client_payload["expiryTime"] = new_expire
+    # id/uuid — на новой панели это поле называется "uuid", а "id" может
+    # дублировать его же значение. Сохраняем оба, если присутствуют.
+    if "uuid" in client_data:
+        client_payload["id"] = client_data.get("uuid", client_id)
+    elif "id" not in client_payload:
+        client_payload["id"] = client_id
+
+    # Список inbound'ов: приоритет — реальный список с панели,
+    # fallback — полный список всех известных inbound'ов проекта.
+    inbound_ids = current_inbound_ids if current_inbound_ids else _all_inbound_ids()
+    if not current_inbound_ids:
+        logger.warning(
+            f"update_client_expiry: get_client did not return inboundIds for "
+            f"{email}, falling back to _all_inbound_ids()={inbound_ids}"
+        )
+
+    payload = {"client": client_payload, "inboundIds": inbound_ids}
+
+    logger.info(
+        f"update_client_expiry: BEFORE update — email={email}, "
+        f"current_inbound_ids(from panel)={current_inbound_ids}, "
+        f"will_send_inbound_ids={inbound_ids}, "
+        f"old_expiry={client_data.get('expiryTime')}, new_expiry={new_expire}"
+    )
 
     data = await panel.post(f"/panel/api/clients/update/{email}", payload)
     result = bool(data and data.get("success"))
     logger.info(f"update_client_expiry result: {result}, new_expire={new_expire}")
+
+    # Пост-проверка: смотрим что реально осталось на панели после update
+    verify = await get_client(email, region)
+    if verify:
+        verify_inbound_ids = verify.get("inboundIds")
+        logger.info(
+            f"update_client_expiry: AFTER update — email={email}, "
+            f"inbound_ids_on_panel_now={verify_inbound_ids}"
+        )
+        if current_inbound_ids and verify_inbound_ids and set(verify_inbound_ids) != set(current_inbound_ids):
+            logger.error(
+                f"update_client_expiry: INBOUND MISMATCH for {email}! "
+                f"before={current_inbound_ids} after={verify_inbound_ids} "
+                f"— клиент потерял привязку к части inbound'ов!"
+            )
+    else:
+        logger.warning(f"update_client_expiry: post-update verify get_client failed for {email}")
+
     return result
 
 
@@ -283,33 +330,64 @@ async def update_client_ip_limit(
     """
     Обновляет лимит IP-адресов клиента.
 
-    ВАЖНО: сначала получаем текущий объект чтобы не затереть expiryTime и др.
+    Та же логика, что в update_client_expiry: сохраняем ВСЕ поля
+    текущего клиента (включая протокол-специфичные секреты) и
+    передаём полный inboundIds.
     """
     logger.info(f"update_client_ip_limit: email={email}, limit={limit}, region={region}")
 
     current = await get_client(email, region)
     if current:
         client_data = current.get("client", {})
+        current_inbound_ids = current.get("inboundIds")
     else:
         client_data = {}
+        current_inbound_ids = None
 
     panel = _panels.get(region, _panel)
-    payload = {
-        "email": email,
-        "id": client_data.get("uuid", client_id),
-        "subId": client_data.get("subId", email),
-        "flow": client_data.get("flow", "xtls-rprx-vision"),
-        "totalGB": client_data.get("totalGB", 0),
-        "expiryTime": client_data.get("expiryTime", 0),
-        "enable": client_data.get("enable", True),
-        "tgId": client_data.get("tgId", 0),
-        "limitIp": limit,
-        "comment": client_data.get("comment", ""),
-    }
+    client_payload = dict(client_data)
+    client_payload["email"] = email
+    client_payload["limitIp"] = limit
+    if "uuid" in client_data:
+        client_payload["id"] = client_data.get("uuid", client_id)
+    elif "id" not in client_payload:
+        client_payload["id"] = client_id
+
+    inbound_ids = current_inbound_ids if current_inbound_ids else _all_inbound_ids()
+    if not current_inbound_ids:
+        logger.warning(
+            f"update_client_ip_limit: get_client did not return inboundIds for "
+            f"{email}, falling back to _all_inbound_ids()={inbound_ids}"
+        )
+
+    payload = {"client": client_payload, "inboundIds": inbound_ids}
+
+    logger.info(
+        f"update_client_ip_limit: BEFORE update — email={email}, "
+        f"current_inbound_ids(from panel)={current_inbound_ids}, "
+        f"will_send_inbound_ids={inbound_ids}"
+    )
 
     data = await panel.post(f"/panel/api/clients/update/{email}", payload)
     result = bool(data and data.get("success"))
     logger.info(f"update_client_ip_limit result: {result}")
+
+    verify = await get_client(email, region)
+    if verify:
+        verify_inbound_ids = verify.get("inboundIds")
+        logger.info(
+            f"update_client_ip_limit: AFTER update — email={email}, "
+            f"inbound_ids_on_panel_now={verify_inbound_ids}"
+        )
+        if current_inbound_ids and verify_inbound_ids and set(verify_inbound_ids) != set(current_inbound_ids):
+            logger.error(
+                f"update_client_ip_limit: INBOUND MISMATCH for {email}! "
+                f"before={current_inbound_ids} after={verify_inbound_ids} "
+                f"— клиент потерял привязку к части inbound'ов!"
+            )
+    else:
+        logger.warning(f"update_client_ip_limit: post-update verify get_client failed for {email}")
+
     return result
 
 
